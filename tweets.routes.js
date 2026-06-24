@@ -36,7 +36,7 @@ router.post('/', requireAuth, async (req, res) => {
 
 // GET /api/tweets — fetch the feed (public, no login required)
 router.get('/', async (req, res) => {
-  // Basic pagination so the feed doesn't try to load your entire
+  // Basic pagination so the feed doesn't try to load entire
   // table at once as the app grows
   const take = Math.min(parseInt(req.query.limit) || 20, 50);
   const cursor = req.query.cursor; // tweet id to start after
