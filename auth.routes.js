@@ -51,8 +51,7 @@ router.post('/login', async (req, res) => {
   try {
     const user = await prisma.user.findUnique({ where: { email } });
 
-    // Deliberately vague error — don't reveal whether the email exists.
-    // This prevents attackers from using your login form to enumerate accounts.
+    // Deliberately vague error to not reveal email to hackers
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
