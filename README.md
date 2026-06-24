@@ -33,7 +33,7 @@
 
    You should see `Server running on http://localhost:3000`.
 
-## Test it (Milestone 1 — your original goal)
+## Test
 
 Register a user:
 ```
@@ -55,8 +55,8 @@ Fetch the feed (no token needed):
 curl http://localhost:3000/api/tweets
 ```
 
-If that last command returns your tweet — you've hit Milestone 1.
+If that last command returns tweet — success.
 
-## What's NOT built yet (on purpose)
+## Next
 Likes and follows are in the schema already, but there are no routes for
-them yet — that's the next milestone once auth + posting + feed feel solid.
+them yet.
