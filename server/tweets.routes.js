@@ -1,6 +1,6 @@
 const express = require('express');
-const router = express.Router();
-const prisma = require('./prisma'); // Points to your Prisma Client instance
+const prisma = require('./prisma');
+const { requireAuth } = require('./auth');
 
 /**
  * 1. POST A TWEET

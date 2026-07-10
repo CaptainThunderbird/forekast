@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./auth.routes');
-const tweetRoutes = require('./tweets.routes');
+const tweetsRoutes = require('./tweets.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5001;

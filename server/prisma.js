@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('./prisma');
 
 // One shared instance for the whole app.
 // Creating a new PrismaClient per request would open a new connection
