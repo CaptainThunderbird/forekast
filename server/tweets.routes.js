@@ -1,63 +1,75 @@
 const express = require('express');
-const prisma = require('../lib/prisma');
-const { requireAuth } = require('../middleware/auth');
+const prisma = require('./prisma');
+const { requireAuth } = require('./auth');
 
-const router = express.Router();
+/**
+ * 1. POST A TWEET
+ * Replaces: self.tweetMap[userId].append(tweetId)
+ */
+router.post('/post', async (req, res) => {
+  const { userId, content } = req.body;
 
-// POST /api/tweets — create a tweet (requires login)
-router.post('/', requireAuth, async (req, res) => {
-  const { content } = req.body;
-
-  if (!content || !content.trim()) {
-    return res.status(400).json({ error: 'Tweet content cannot be empty' });
-  }
-
-  if (content.length > 280) {
-    return res.status(400).json({ error: 'Tweet content cannot exceed 280 characters' });
+  if (!userId || !content) {
+    return res.status(400).json({ error: "userId and content are required fields." });
   }
 
   try {
-    const tweet = await prisma.tweet.create({
+    const newTweet = await prisma.tweet.create({
       data: {
-        content,
-        userId: req.userId, // set by requireAuth middleware from the JWT
+        userId: parseInt(userId),
+        content: content
       },
       include: {
-        user: { select: { id: true, username: true } },
-      },
+        user: {
+          select: { username: true } // Automatically grab the author's handle
+        }
+      }
     });
-
-    res.status(201).json(tweet);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Something went wrong creating your tweet' });
+    return res.status(201).json(newTweet);
+  } catch (error) {
+    console.error("Error creating tweet:", error);
+    return res.status(500).json({ error: "Failed to post tweet to database." });
   }
 });
 
-// GET /api/tweets — fetch the feed (public, no login required)
-router.get('/', async (req, res) => {
-  // Basic pagination so the feed doesn't try to load entire
-  // table at once as the app grows
-  const take = Math.min(parseInt(req.query.limit) || 20, 50);
-  const cursor = req.query.cursor; // tweet id to start after
+/**
+ * 2. GET NEWS FEED (Top 10 Most Recent)
+ * Replaces: Min-Heap / Merge K Sorted Lists algorithm
+ */
+router.get('/feed/:userId', async (req, res) => {
+  const userId = parseInt(req.params.userId);
 
   try {
-    const tweets = await prisma.tweet.findMany({
-      take,
-      ...(cursor && { skip: 1, cursor: { id: cursor } }),
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: { select: { id: true, username: true } },
-        _count: { select: { likes: true } },
-      },
+    // Step A: Find everyone this user follows
+    const followingRelations = await prisma.follows.findMany({
+      where: { followerId: userId },
+      select: { followeeId: true }
     });
 
-    const nextCursor = tweets.length === take ? tweets[tweets.length - 1].id : null;
+    // Step B: Map down to an array of integers and include the user's own ID
+    const authorIds = followingRelations.map(rel => rel.followeeId);
+    authorIds.push(userId); 
 
-    res.json({ tweets, nextCursor });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Something went wrong fetching the feed' });
+    // Step C: Single database lookup replacing the manual sorting heap
+    const newsFeed = await prisma.tweet.findMany({
+      where: {
+        userId: { in: authorIds }
+      },
+      orderBy: {
+        createdAt: 'desc' // Pulls newest tweets first natively
+      },
+      take: 10, // Max limit constraint
+      include: {
+        user: {
+          select: { username: true }
+        }
+      }
+    });
+
+    return res.json(newsFeed);
+  } catch (error) {
+    console.error("Error fetching news feed:", error);
+    return res.status(500).json({ error: "Could not retrieve feed data." });
   }
 });
 
