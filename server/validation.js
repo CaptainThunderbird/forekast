@@ -31,7 +31,7 @@ export const forecastSchema = z
     content: statement.optional(),
     reasoning: z.string().trim().max(2000, 'Reasoning cannot exceed 2,000 characters').optional(),
     category: z
-      .enum(['TECHNOLOGY', 'BUSINESS', 'SCIENCE', 'POLITICS', 'SPORTS', 'CULTURE', 'OTHER'])
+      .enum(['TECHNOLOGY', 'BUSINESS', 'SCIENCE', 'POLITICS', 'SPORTS', 'CULTURE', 'FICTION_MEDIA', 'OTHER'])
       .default('OTHER'),
     targetDate: z.coerce.date().min(new Date(), 'Target date must be in the future').optional(),
   })

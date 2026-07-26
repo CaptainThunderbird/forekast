@@ -1,5 +1,6 @@
-const CATEGORIES = ['TECHNOLOGY', 'BUSINESS', 'SCIENCE', 'POLITICS', 'SPORTS', 'CULTURE', 'OTHER']
+const CATEGORIES = ['TECHNOLOGY', 'BUSINESS', 'SCIENCE', 'POLITICS', 'SPORTS', 'CULTURE', 'FICTION_MEDIA', 'OTHER']
 const STATUSES = ['OPEN', 'CORRECT', 'INCORRECT', 'INCONCLUSIVE']
+const categoryLabel = (category) => category === 'FICTION_MEDIA' ? 'FICTION & MEDIA' : category
 
 function Avatar({ user, button = false }) {
   const content = user.avatarUrl
@@ -69,7 +70,7 @@ export default function FeedPage({
                 <div className="compact-fields">
                   <label>Category
                     <select value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })}>
-                      {CATEGORIES.map((category) => <option key={category}>{category}</option>)}
+                      {CATEGORIES.map((category) => <option key={category} value={category}>{categoryLabel(category)}</option>)}
                     </select>
                   </label>
                   <label>Target date
@@ -93,7 +94,7 @@ export default function FeedPage({
           <div>
             <select aria-label="Filter by category" value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value })}>
               <option value="">All categories</option>
-              {CATEGORIES.map((category) => <option key={category}>{category}</option>)}
+              {CATEGORIES.map((category) => <option key={category} value={category}>{categoryLabel(category)}</option>)}
             </select>
             <select aria-label="Filter by status" value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })}>
               <option value="">All statuses</option>
@@ -115,7 +116,7 @@ export default function FeedPage({
                 <button className="forecast-statement" onClick={() => setSelected(forecast)}>{forecast.statement || forecast.content}</button>
                 {forecast.reasoning && <p className="forecast-reasoning">{forecast.reasoning}</p>}
                 <div className="forecast-footer">
-                  <span>{forecast.category}</span>
+                  <span>{categoryLabel(forecast.category)}</span>
                   <span>Resolves {forecast.targetDate ? new Date(forecast.targetDate).toLocaleDateString() : 'later'}</span>
                   <button className={forecast.signals?.length ? 'signaled' : ''} onClick={() => toggleSignal(forecast)}>{forecast.signals?.length ? '◆' : '◇'} {forecast._count?.signals || 0}</button>
                   <button onClick={() => setSelected(forecast)}>Details</button>
@@ -139,7 +140,7 @@ export default function FeedPage({
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelected(null)}>
           <section className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="feed-forecast-title" onMouseDown={(event) => event.stopPropagation()}>
             <button className="modal-close" aria-label="Close details" onClick={() => setSelected(null)}>×</button>
-            <p className="eyebrow">{selected.category} · {selected.status}</p>
+            <p className="eyebrow">{categoryLabel(selected.category)} · {selected.status}</p>
             <h2 id="feed-forecast-title">{selected.statement || selected.content}</h2>
             {selected.reasoning && <p className="detail-reasoning">{selected.reasoning}</p>}
             <dl>

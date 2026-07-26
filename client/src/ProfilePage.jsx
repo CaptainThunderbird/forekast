@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+const categoryLabel = (category) => category === 'FICTION_MEDIA' ? 'FICTION & MEDIA' : category
+
 function Avatar({ user, large = false }) {
   const className = `avatar${large ? ' large' : ''}`
   return user.avatarUrl
@@ -106,7 +108,7 @@ export default function ProfilePage({
               {profile.forecasts.length ? profile.forecasts.map((forekast) => (
                 <article key={forekast.id}>
                   <div>
-                    <span>{forekast.category} · {forekast.status}</span>
+                    <span>{categoryLabel(forekast.category)} · {forekast.status}</span>
                     <p>{forekast.statement}</p>
                   </div>
                   <time>{new Date(forekast.createdAt).toLocaleDateString()}</time>
