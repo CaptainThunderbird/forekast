@@ -8,8 +8,11 @@ const router = express.Router();
 router.patch('/me', requireAuth, validate(profileSchema), async (req, res) => {
   const user = await prisma.user.update({
     where: { id: req.userId },
-    data: { bio: req.validatedBody.bio },
-    select: { id: true, username: true, email: true, bio: true, createdAt: true },
+    data: {
+      bio: req.validatedBody.bio,
+      avatarUrl: req.validatedBody.avatarUrl,
+    },
+    select: { id: true, username: true, email: true, bio: true, avatarUrl: true, createdAt: true },
   });
   res.json(user);
 });
@@ -21,6 +24,7 @@ router.get('/:username', optionalAuth, async (req, res) => {
       id: true,
       username: true,
       bio: true,
+      avatarUrl: true,
       createdAt: true,
       _count: { select: { forecasts: true, followers: true, following: true } },
       forecasts: {

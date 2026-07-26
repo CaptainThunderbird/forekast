@@ -17,7 +17,7 @@ router.post('/register', validate(registerSchema), async (req, res) => {
     const user = await prisma.user.create({
       data: { username, email, passwordHash },
       // Never select passwordHash back out — keep it out of every response
-      select: { id: true, username: true, email: true, createdAt: true },
+      select: { id: true, username: true, email: true, bio: true, avatarUrl: true, createdAt: true },
     });
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -52,7 +52,7 @@ router.post('/login', validate(loginSchema), async (req, res) => {
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
-      user: { id: user.id, username: user.username, email: user.email },
+      user: { id: user.id, username: user.username, email: user.email, bio: user.bio, avatarUrl: user.avatarUrl },
       token,
     });
   } catch (err) {

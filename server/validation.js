@@ -14,8 +14,12 @@ export const registerSchema = z.object({ username, email, password }).strict();
 export const loginSchema = z.object({ email, password }).strict();
 export const profileSchema = z.object({
   bio: z.string().trim().max(240, 'Biography cannot exceed 240 characters'),
-}).strict();
-const statement = z.string().trim().min(1, 'A forecast cannot be empty').max(280, 'A forecast cannot exceed 280 characters');
+  avatarUrl: z.union([
+    z.literal(''),
+    z.string().trim().url('Enter a valid profile picture URL').max(1000),
+  ]).optional(),
+}).strict().transform((data) => ({ ...data, avatarUrl: data.avatarUrl || null }));
+const statement = z.string().trim().min(1, 'A forekast cannot be empty').max(280, 'A forekast cannot exceed 280 characters');
 
 export const forecastSchema = z
   .object({
@@ -29,7 +33,7 @@ export const forecastSchema = z
   })
   .strict()
   .refine((data) => data.statement || data.content, {
-    message: 'A forecast statement is required',
+    message: 'A forekast statement is required',
     path: ['statement'],
   })
   .transform((data) => ({
