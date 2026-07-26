@@ -6,6 +6,7 @@ import ProfilePage from './ProfilePage'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
 const MIN_TARGET_DATE = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
 const PAGE_LOAD_TIME = Date.now()
+const categoryLabel = (category) => category === 'FICTION_MEDIA' ? 'FICTION & MEDIA' : category
 
 function App() {
   const [session, setSession] = useState(() => {
@@ -333,7 +334,7 @@ function App() {
           <label>Category
             <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
               <option value="">All categories</option>
-              {['TECHNOLOGY', 'BUSINESS', 'SCIENCE', 'POLITICS', 'SPORTS', 'CULTURE', 'OTHER'].map((category) => <option key={category}>{category}</option>)}
+              {['TECHNOLOGY', 'BUSINESS', 'SCIENCE', 'POLITICS', 'SPORTS', 'CULTURE', 'FICTION_MEDIA', 'OTHER'].map((category) => <option key={category} value={category}>{categoryLabel(category)}</option>)}
             </select>
           </label>
           <label>Status
@@ -351,7 +352,7 @@ function App() {
               <div>
                 <p className="meta"><button className="author-button" onClick={() => openProfile(forecast.user.username)}>@{forecast.user.username}</button><span>{new Date(forecast.createdAt).toLocaleString()}</span></p>
                 <div className="forecast-tags">
-                  <span>{forecast.category || 'OTHER'}</span>
+                  <span>{categoryLabel(forecast.category || 'OTHER')}</span>
                   <span className={`status ${String(forecast.status || 'OPEN').toLowerCase()}`}>{forecast.status || 'OPEN'}</span>
                 </div>
                 <p className="post">{forecast.statement || forecast.content}</p>
@@ -371,7 +372,7 @@ function App() {
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelected(null)}>
           <section className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="forecast-title" onMouseDown={(event) => event.stopPropagation()}>
             <button className="modal-close" aria-label="Close details" onClick={() => setSelected(null)}>×</button>
-            <p className="eyebrow">{selected.category} · {selected.status}</p>
+            <p className="eyebrow">{categoryLabel(selected.category)} · {selected.status}</p>
             <h2 id="forecast-title">{selected.statement || selected.content}</h2>
             {selected.reasoning && <p className="detail-reasoning">{selected.reasoning}</p>}
             <dl>
@@ -445,7 +446,7 @@ function App() {
             <div className="profile-forecasts">
               {profile.forecasts.length ? profile.forecasts.map((forecast) => (
                 <button key={forecast.id} onClick={() => { setProfile(null); setSelected({ ...forecast, user: { id: profile.id, username: profile.username } }) }}>
-                  <span>{forecast.category}</span>{forecast.statement}
+                  <span>{categoryLabel(forecast.category)}</span>{forecast.statement}
                 </button>
               )) : <p className="empty">No forekasts yet.</p>}
             </div>

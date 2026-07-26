@@ -88,6 +88,7 @@ enum Category {
   POLITICS
   SPORTS
   CULTURE
+  FICTION_MEDIA
   OTHER
 }
 
