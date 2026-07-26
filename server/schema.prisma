@@ -1,10 +1,13 @@
 generator client {
-  provider = "prisma-client-js"
+  provider               = "prisma-client"
+  output                 = "./generated/prisma"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "ts"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -15,8 +18,8 @@ model User {
   bio           String?
   createdAt     DateTime  @default(now())
 
-  tweets        Tweet[]
-  likes         Like[]
+  forecasts     Forecast[]
+  signals       Signal[]
 
   // Self-referencing many-to-many for follows.
   // "following" = the users THIS user follows
@@ -27,33 +30,71 @@ model User {
   @@map("users")
 }
 
-model Tweet {
-  id        String   @id @default(uuid())
-  content   String   @db.VarChar(280)
-  createdAt DateTime @default(now())
+model Forecast {
+  id         String         @id @default(uuid())
+  statement  String         @map("content") @db.VarChar(280)
+  reasoning  String?        @db.VarChar(2000)
+  category   Category       @default(OTHER)
+  targetDate DateTime?
+  status     ForecastStatus @default(OPEN)
+  createdAt  DateTime       @default(now())
+  resolvedAt DateTime?
 
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  likes     Like[]
+  signals   Signal[]
+  resolution Resolution?
 
   @@index([userId])
+  @@index([status, createdAt])
+  @@index([category, createdAt])
   @@map("tweets")
 }
 
-model Like {
+model Resolution {
+  id          String         @id @default(uuid())
+  result      ForecastStatus
+  explanation String         @db.VarChar(2000)
+  sourceUrl   String?        @db.VarChar(1000)
+  createdAt   DateTime       @default(now())
+
+  forecastId String   @unique
+  forecast   Forecast @relation(fields: [forecastId], references: [id], onDelete: Cascade)
+
+  @@map("resolutions")
+}
+
+model Signal {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  tweetId   String
-  tweet     Tweet    @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+  forecastId String   @map("tweetId")
+  forecast   Forecast @relation(fields: [forecastId], references: [id], onDelete: Cascade)
 
   // a user can only like a given tweet once
-  @@unique([userId, tweetId])
+  @@unique([userId, forecastId])
   @@map("likes")
+}
+
+enum Category {
+  TECHNOLOGY
+  BUSINESS
+  SCIENCE
+  POLITICS
+  SPORTS
+  CULTURE
+  OTHER
+}
+
+enum ForecastStatus {
+  OPEN
+  CORRECT
+  INCORRECT
+  INCONCLUSIVE
 }
 
 model Follow {
