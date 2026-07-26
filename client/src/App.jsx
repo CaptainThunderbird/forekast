@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import './App.css'
+import FeedPage from './FeedPage'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
 const MIN_TARGET_DATE = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
@@ -26,6 +27,7 @@ function App() {
   const [profile, setProfile] = useState(null)
   const [bioDraft, setBioDraft] = useState('')
   const [resolutionDraft, setResolutionDraft] = useState({ result: 'CORRECT', explanation: '', sourceUrl: '' })
+  const [composerExpanded, setComposerExpanded] = useState(false)
 
   async function request(path, options = {}) {
     const response = await fetch(`${API_URL}${path}`, {
@@ -71,6 +73,7 @@ function App() {
       localStorage.setItem('forekast-session', JSON.stringify(data))
       setSession(data)
       setForm({ username: '', email: '', password: '' })
+      window.location.href = '/feed'
     } catch (error) {
       setMessage(error.message)
     } finally {
@@ -212,6 +215,32 @@ function App() {
     }
   }
 
+  if (window.location.pathname === '/feed') {
+    return (
+      <FeedPage
+        session={session}
+        forecasts={forecasts}
+        draft={draft}
+        setDraft={setDraft}
+        filters={filters}
+        setFilters={setFilters}
+        message={message}
+        busy={busy}
+        composerExpanded={composerExpanded}
+        setComposerExpanded={setComposerExpanded}
+        publish={publish}
+        logout={logout}
+        openProfile={openProfile}
+        toggleSignal={toggleSignal}
+        selected={selected}
+        setSelected={setSelected}
+        profile={profile}
+        setProfile={setProfile}
+        minTargetDate={MIN_TARGET_DATE}
+      />
+    )
+  }
+
   return (
     <main className="shell">
       <aside className="brand-panel">
@@ -253,30 +282,17 @@ function App() {
             </button>
           </form>
         ) : (
-          <form className="composer" onSubmit={publish}>
-            <label htmlFor="statement">What do you see coming?</label>
-            <textarea id="statement" maxLength="280" value={draft.statement} onChange={(e) => setDraft({ ...draft, statement: e.target.value })} placeholder="State a clear, testable forecast…" />
-            <label className="secondary-label" htmlFor="reasoning">Why do you think this?</label>
-            <textarea className="reasoning-input" id="reasoning" maxLength="2000" value={draft.reasoning} onChange={(e) => setDraft({ ...draft, reasoning: e.target.value })} placeholder="Optional context or evidence…" />
-            <div className="forecast-fields">
-              <label>Category
-                <select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })}>
-                  {['TECHNOLOGY', 'BUSINESS', 'SCIENCE', 'POLITICS', 'SPORTS', 'CULTURE', 'OTHER'].map((category) => (
-                    <option key={category}>{category}</option>
-                  ))}
-                </select>
-              </label>
-              <label>Resolution date
-                <input type="date" min={MIN_TARGET_DATE} required value={draft.targetDate} onChange={(e) => setDraft({ ...draft, targetDate: e.target.value })} />
-              </label>
-            </div>
-            <div><span>{draft.statement.length}/280</span><button className="primary" disabled={busy || !draft.statement.trim() || !draft.targetDate}>Publish forecast</button></div>
-          </form>
+          <div className="auth-card landing-launch">
+            <p className="issue">SIGNED IN</p>
+            <h3>Ready to forecast?</h3>
+            <p>Your timeline and composer now live in a focused, compact workspace.</p>
+            <a className="primary" href="/feed">Open your forecast feed</a>
+          </div>
         )}
 
         {message && <p className="message" role="alert">{message}</p>}
 
-        <div className="filters" aria-label="Forecast filters">
+        <div className="landing-feed-legacy"><div className="filters" aria-label="Forecast filters">
           <label>Category
             <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
               <option value="">All categories</option>
@@ -311,7 +327,7 @@ function App() {
               </div>
             </article>
           ))}
-        </div>
+        </div></div>
       </section>
 
       {selected && (
