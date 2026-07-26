@@ -121,7 +121,7 @@ dd { margin: 4px 0 0; font-weight: 600; }
 .feed-nav-link:hover, .feed-nav-link.active { background: #e8e4d9; color: #172f28; }
 .sidebar-account { margin-top: auto; display: grid; grid-template-columns: 38px 1fr; gap: 10px; align-items: center; }
 .sidebar-account .avatar { width: 38px; height: 38px; }
-.sidebar-account strong { display: block; font-size: .78rem; }
+.sidebar-account .sidebar-profile-link { display: block; color: #252824; font-size: .78rem; font-weight: 700; }
 .sidebar-account button { border: 0; background: none; padding: 2px 0; color: #73766f; font-size: .7rem; }
 .sidebar-signin { margin-top: auto; text-align: center; text-decoration: none; }
 .stream { min-height: 100vh; border-right: 1px solid #d2cec3; }

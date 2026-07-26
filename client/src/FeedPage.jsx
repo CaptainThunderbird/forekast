@@ -26,8 +26,11 @@ export default function FeedPage({
         </nav>
         {session ? (
           <div className="sidebar-account">
-            <Avatar user={session.user} />
-            <div><strong>@{session.user.username}</strong><button onClick={logout}>Sign out</button></div>
+            <Avatar user={session.user} button />
+            <div>
+              <button className="sidebar-profile-link" onClick={() => openProfile(session.user.username)}>@{session.user.username}</button>
+              <button onClick={logout}>Sign out</button>
+            </div>
           </div>
         ) : <a className="primary sidebar-signin" href="/">Sign in</a>}
       </aside>
