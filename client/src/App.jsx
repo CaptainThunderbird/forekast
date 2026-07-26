@@ -37,7 +37,10 @@ function App() {
       },
     })
     const data = await response.json()
-    if (!response.ok) throw new Error(data.error || 'Something went wrong')
+    if (!response.ok) {
+      const details = data.details?.map((item) => `${item.field}: ${item.message}`).join(' · ')
+      throw new Error(details || data.error || 'Something went wrong')
+    }
     return data
   }
 
