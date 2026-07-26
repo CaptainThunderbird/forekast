@@ -8,7 +8,9 @@ const SALT_ROUNDS = 10;
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
+  const username = typeof req.body.username === 'string' ? req.body.username.trim() : '';
+  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  const password = req.body.password;
 
   if (!username || !email || !password) {
     return res.status(400).json({ error: 'username, email, and password are required' });
@@ -16,6 +18,10 @@ router.post('/register', async (req, res) => {
 
   if (password.length < 8) {
     return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  }
+
+  if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) {
+    return res.status(400).json({ error: 'Username must be 3–24 letters, numbers, or underscores' });
   }
 
   try {
@@ -42,7 +48,8 @@ router.post('/register', async (req, res) => {
 
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  const password = req.body.password;
 
   if (!email || !password) {
     return res.status(400).json({ error: 'email and password are required' });

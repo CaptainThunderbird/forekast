@@ -1,62 +1,40 @@
-# Twitter clone — backend (MVP)
+# Forekast
 
-## What's here
-- `prisma/schema.prisma` — the database schema (Users, Tweets, Likes, Follows)
-- `src/lib/prisma.js` — shared database client
-- `src/middleware/auth.js` — JWT verification for protected routes
-- `src/routes/auth.routes.js` — register & login
-- `src/routes/tweets.routes.js` — create tweet & fetch feed
-- `src/index.js` — server entry point
+Forekast is a small social forecasting app built with React, Express, PostgreSQL, and Prisma.
 
-## Setup
+## Run it locally
 
-1. Install Postgres locally (or use a free hosted one like Supabase/Neon/Railway).
+1. Copy `.env.example` to `server/.env`.
+2. Replace `DATABASE_URL` with your PostgreSQL connection string and set a long, random `JWT_SECRET`.
+3. In one terminal:
 
-2. Install dependencies:
-   ```
+   ```powershell
+   cd server
    npm install
-   ```
-
-3. Edit `.env` — replace `DATABASE_URL` with your real Postgres connection
-   string, and replace `JWT_SECRET` with a long random string (you can
-   generate one with `openssl rand -base64 32`).
-
-4. Run the migration — this reads `schema.prisma` and creates your tables:
-   ```
-   npx prisma migrate dev --name init
-   ```
-
-5. Start the server:
-   ```
+   npm run generate
+   npx prisma migrate dev --schema=schema.prisma --name init
    npm run dev
    ```
 
-   You should see `Server running on http://localhost:3000`.
+4. In a second terminal:
 
-## Test
+   ```powershell
+   cd client
+   npm install
+   npm run dev
+   ```
 
-Register a user:
-```
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"alice","email":"alice@example.com","password":"password123"}'
-```
+5. Open `http://localhost:5173`.
 
-Copy the `token` from the response, then post a tweet:
-```
-curl -X POST http://localhost:3000/api/tweets \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
-  -d '{"content":"hello world"}'
-```
+The API runs on `http://localhost:5001` by default. Set `VITE_API_URL` in
+`client/.env` if the API is hosted somewhere else.
 
-Fetch the feed (no token needed):
-```
-curl http://localhost:3000/api/tweets
-```
+## Available features
 
-If that last command returns tweet — success.
+- Create an account and sign in
+- Publish forecasts up to 280 characters
+- View the public timeline
+- View a personal feed containing your posts and posts from followed users
 
-## Next
-Likes and follows are in the schema already, but there are no routes for
-them yet.
+The database already supports likes and follows; controls for those are a good
+next feature.
