@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 5001;
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
-app.use(express.json({ limit: '32kb' }));
+app.use(express.json({ limit: '256kb' }));
 app.use('/api/auth', rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 30,
