@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const prisma = require('../lib/prisma');
+const prisma = require('./prisma');
 
 const router = express.Router();
 const SALT_ROUNDS = 10;

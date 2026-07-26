@@ -2,6 +2,8 @@ const express = require('express');
 const prisma = require('./prisma');
 const { requireAuth } = require('./auth');
 
+const router = express.Router();
+
 /**
  * 1. POST A TWEET
  * Replaces: self.tweetMap[userId].append(tweetId)
