@@ -17,7 +17,7 @@ router.get('/', optionalAuth, async (_req, res) => {
       orderBy: { createdAt: 'desc' },
       take: 50,
       include: {
-        user: { select: { id: true, username: true } },
+        user: { select: { id: true, username: true, avatarUrl: true } },
         _count: { select: { signals: true } },
         ...(_req.userId ? { signals: { where: { userId: _req.userId }, select: { id: true } } } : {}),
         resolution: true,
@@ -44,7 +44,7 @@ router.get('/feed', requireAuth, async (req, res) => {
       orderBy: { createdAt: 'desc' },
       take: 50,
       include: {
-        user: { select: { id: true, username: true } },
+        user: { select: { id: true, username: true, avatarUrl: true } },
         _count: { select: { signals: true } },
         signals: { where: { userId: req.userId }, select: { id: true } },
         resolution: true,
@@ -62,17 +62,17 @@ router.get('/:id', optionalAuth, async (req, res) => {
     const forecast = await prisma.forecast.findUnique({
       where: { id: req.params.id },
       include: {
-        user: { select: { id: true, username: true, bio: true } },
+        user: { select: { id: true, username: true, bio: true, avatarUrl: true } },
         _count: { select: { signals: true } },
         ...(req.userId ? { signals: { where: { userId: req.userId }, select: { id: true } } } : {}),
         resolution: true,
       },
     });
 
-    if (!forecast) return res.status(404).json({ error: 'Forecast not found' });
+    if (!forecast) return res.status(404).json({ error: 'Forekast not found' });
     res.json(forecast);
   } catch (error) {
-    if (error?.code === 'P2023') return res.status(400).json({ error: 'Invalid forecast ID' });
+    if (error?.code === 'P2023') return res.status(400).json({ error: 'Invalid forekast ID' });
     throw error;
   }
 });
@@ -84,7 +84,7 @@ router.post('/', requireAuth, validate(forecastSchema), async (req, res) => {
     const forecast = await prisma.forecast.create({
       data: { userId: req.userId, statement, reasoning, category, targetDate },
       include: {
-        user: { select: { id: true, username: true } },
+        user: { select: { id: true, username: true, avatarUrl: true } },
         _count: { select: { signals: true } },
       },
     });
@@ -101,9 +101,9 @@ router.delete('/:id', requireAuth, async (req, res) => {
     select: { userId: true, status: true },
   });
 
-  if (!forecast) return res.status(404).json({ error: 'Forecast not found' });
-  if (forecast.userId !== req.userId) return res.status(403).json({ error: 'You can only delete your own forecasts' });
-  if (forecast.status !== 'OPEN') return res.status(409).json({ error: 'Resolved forecasts cannot be deleted' });
+  if (!forecast) return res.status(404).json({ error: 'Forekast not found' });
+  if (forecast.userId !== req.userId) return res.status(403).json({ error: 'You can only delete your own forekasts' });
+  if (forecast.status !== 'OPEN') return res.status(409).json({ error: 'Resolved forekasts cannot be deleted' });
 
   await prisma.forecast.delete({ where: { id: req.params.id } });
   res.status(204).send();
@@ -115,11 +115,11 @@ router.post('/:id/resolve', requireAuth, validate(resolutionSchema), async (req,
     select: { id: true, userId: true, status: true, targetDate: true },
   });
 
-  if (!forecast) return res.status(404).json({ error: 'Forecast not found' });
-  if (forecast.userId !== req.userId) return res.status(403).json({ error: 'Only the author can resolve this forecast' });
-  if (forecast.status !== 'OPEN') return res.status(409).json({ error: 'This forecast is already resolved' });
+  if (!forecast) return res.status(404).json({ error: 'Forekast not found' });
+  if (forecast.userId !== req.userId) return res.status(403).json({ error: 'Only the author can resolve this forekast' });
+  if (forecast.status !== 'OPEN') return res.status(409).json({ error: 'This forekast is already resolved' });
   if (forecast.targetDate && forecast.targetDate > new Date()) {
-    return res.status(409).json({ error: 'This forecast cannot be resolved before its target date' });
+    return res.status(409).json({ error: 'This forekast cannot be resolved before its target date' });
   }
 
   const resolvedAt = new Date();
@@ -131,7 +131,7 @@ router.post('/:id/resolve', requireAuth, validate(resolutionSchema), async (req,
       where: { id: forecast.id },
       data: { status: req.validatedBody.result, resolvedAt },
       include: {
-        user: { select: { id: true, username: true } },
+        user: { select: { id: true, username: true, avatarUrl: true } },
         _count: { select: { signals: true } },
         resolution: true,
       },
@@ -143,7 +143,7 @@ router.post('/:id/resolve', requireAuth, validate(resolutionSchema), async (req,
 
 router.post('/:id/signal', requireAuth, async (req, res) => {
   const forecast = await prisma.forecast.findUnique({ where: { id: req.params.id }, select: { id: true } });
-  if (!forecast) return res.status(404).json({ error: 'Forecast not found' });
+  if (!forecast) return res.status(404).json({ error: 'Forekast not found' });
 
   await prisma.signal.upsert({
     where: { userId_forecastId: { userId: req.userId, forecastId: forecast.id } },

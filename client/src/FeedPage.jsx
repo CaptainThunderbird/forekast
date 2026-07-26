@@ -1,6 +1,15 @@
 const CATEGORIES = ['TECHNOLOGY', 'BUSINESS', 'SCIENCE', 'POLITICS', 'SPORTS', 'CULTURE', 'OTHER']
 const STATUSES = ['OPEN', 'CORRECT', 'INCORRECT', 'INCONCLUSIVE']
 
+function Avatar({ user, button = false }) {
+  const content = user.avatarUrl
+    ? <img className="avatar-image" src={user.avatarUrl} alt="" />
+    : user.username.slice(0, 1).toUpperCase()
+  return button
+    ? <button className="avatar avatar-button" onClick={() => window.location.href = `/profile/${encodeURIComponent(user.username)}`} aria-label={`Open @${user.username}'s profile`}>{content}</button>
+    : <div className="avatar">{content}</div>
+}
+
 export default function FeedPage({
   session, forecasts, draft, setDraft, filters, setFilters, message, busy,
   composerExpanded, setComposerExpanded, publish, logout, openProfile,
@@ -12,12 +21,12 @@ export default function FeedPage({
         <a className="feed-brand" href="/">FOREKAST<span>.</span></a>
         <nav aria-label="Primary navigation">
           <a href="/" className="feed-nav-link"><span>⌂</span> Landing</a>
-          <a href="/feed" className="feed-nav-link active"><span>◫</span> Forecasts</a>
+          <a href="/feed" className="feed-nav-link active"><span>◫</span> Forekasts</a>
           {session && <button className="feed-nav-link" onClick={() => openProfile(session.user.username)}><span>○</span> Profile</button>}
         </nav>
         {session ? (
           <div className="sidebar-account">
-            <div className="avatar">{session.user.username.slice(0, 1).toUpperCase()}</div>
+            <Avatar user={session.user} />
             <div><strong>@{session.user.username}</strong><button onClick={logout}>Sign out</button></div>
           </div>
         ) : <a className="primary sidebar-signin" href="/">Sign in</a>}
@@ -25,16 +34,16 @@ export default function FeedPage({
 
       <main className="stream">
         <header className="stream-header">
-          <div><p className="eyebrow">LIVE EDITION</p><h1>Forecasts</h1></div>
+          <div><p className="eyebrow">LIVE EDITION</p><h1>Forekasts</h1></div>
           <span className="live-dot">Live</span>
         </header>
 
         {session ? (
           <form className={`quick-composer ${composerExpanded ? 'expanded' : ''}`} onSubmit={publish}>
             <div className="quick-composer-main">
-              <div className="avatar">{session.user.username.slice(0, 1).toUpperCase()}</div>
+              <Avatar user={session.user} />
               <textarea
-                aria-label="Forecast statement"
+                aria-label="Forekast statement"
                 maxLength="280"
                 rows={composerExpanded ? 3 : 1}
                 value={draft.statement}
@@ -67,7 +76,7 @@ export default function FeedPage({
                 <div className="composer-actions">
                   <button type="button" className="text-button" onClick={() => setComposerExpanded(false)}>Cancel</button>
                   <span>{draft.statement.length}/280</span>
-                  <button className="primary" disabled={busy || !draft.statement.trim() || !draft.targetDate}>Forecast</button>
+                  <button className="primary" disabled={busy || !draft.statement.trim() || !draft.targetDate}>Forekast</button>
                 </div>
               </div>
             )}
@@ -91,9 +100,9 @@ export default function FeedPage({
         </div>
 
         <div className="compact-timeline">
-          {forecasts.length === 0 ? <p className="empty">No forecasts match this view.</p> : forecasts.map((forecast) => (
+          {forecasts.length === 0 ? <p className="empty">No forekasts match this view.</p> : forecasts.map((forecast) => (
             <article className="forecast-card" key={forecast.id}>
-              <button className="avatar avatar-button" onClick={() => openProfile(forecast.user.username)}>{forecast.user.username.slice(0, 1).toUpperCase()}</button>
+              <Avatar user={forecast.user} button />
               <div className="forecast-body">
                 <div className="forecast-author">
                   <button onClick={() => openProfile(forecast.user.username)}>@{forecast.user.username}</button>
@@ -118,7 +127,7 @@ export default function FeedPage({
         <div className="context-card">
           <p className="eyebrow">FOREKAST NOTE</p>
           <h2>Make it testable.</h2>
-          <p>The strongest forecasts name a clear outcome and a date when anyone can check what happened.</p>
+          <p>The strongest forekasts name a clear outcome and a date when anyone can check what happened.</p>
         </div>
         <div className="context-card muted"><strong>Feed controls</strong><p>Use category and status filters to narrow the conversation.</p></div>
       </aside>
@@ -146,7 +155,7 @@ export default function FeedPage({
             <button className="modal-close" aria-label="Close profile" onClick={() => setProfile(null)}>×</button>
             <div className="profile-heading"><div className="avatar large">{profile.username.slice(0, 1).toUpperCase()}</div><div><p className="eyebrow">FOREKASTER</p><h2 id="feed-profile-title">@{profile.username}</h2></div></div>
             <p className="detail-reasoning">{profile.bio || 'No biography yet.'}</p>
-            <dl><div><dt>Forecasts</dt><dd>{profile._count.forecasts}</dd></div><div><dt>Followers</dt><dd>{profile._count.followers}</dd></div><div><dt>Accuracy</dt><dd>{profile.accuracy === null ? '—' : `${profile.accuracy}%`}</dd></div></dl>
+            <dl><div><dt>Forekasts</dt><dd>{profile._count.forecasts}</dd></div><div><dt>Followers</dt><dd>{profile._count.followers}</dd></div><div><dt>Accuracy</dt><dd>{profile.accuracy === null ? '—' : `${profile.accuracy}%`}</dd></div></dl>
           </section>
         </div>
       )}
