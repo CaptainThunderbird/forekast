@@ -101,6 +101,9 @@ dd { margin: 4px 0 0; font-weight: 600; }
 .profile-editor .primary { justify-self: start; }
 .profile-preview { display: flex; align-items: center; gap: 12px; color: #73766f; font-size: .75rem; }
 .profile-preview img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 1px solid #c8c5bc; }
+.photo-help { margin: -10px 0 0; color: #73766f; font-size: .72rem; }
+.field-error { margin: -8px 0 0; color: #9b321e; font-size: .76rem; }
+.profile-editor .remove-photo { justify-self: start; color: #9b321e; }
 .profile-stats { margin: 32px 0; }
 .profile-history { margin-top: 42px; }
 .profile-history h2 { margin-bottom: 14px; }

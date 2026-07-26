@@ -16,7 +16,11 @@ export const profileSchema = z.object({
   bio: z.string().trim().max(240, 'Biography cannot exceed 240 characters'),
   avatarUrl: z.union([
     z.literal(''),
-    z.string().trim().url('Enter a valid profile picture URL').max(1000),
+    z.string().trim().url('Enter a valid profile picture URL').max(240000),
+    z.string().max(240000).regex(
+      /^data:image\/(?:jpeg|png|webp);base64,[a-zA-Z0-9+/=]+$/,
+      'Choose a valid JPG, PNG, or WebP profile picture',
+    ),
   ]).optional(),
 }).strict().transform((data) => ({ ...data, avatarUrl: data.avatarUrl || null }));
 const statement = z.string().trim().min(1, 'A forekast cannot be empty').max(280, 'A forekast cannot exceed 280 characters');
