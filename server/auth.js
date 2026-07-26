@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
 // Expects header: Authorization: Bearer <token>
 function requireAuth(req, res, next) {
@@ -20,4 +20,16 @@ function requireAuth(req, res, next) {
   }
 }
 
-module.exports = { requireAuth };
+function optionalAuth(req, _res, next) {
+  const header = req.headers.authorization;
+  if (header?.startsWith('Bearer ')) {
+    try {
+      req.userId = jwt.verify(header.slice(7), process.env.JWT_SECRET).userId;
+    } catch {
+      req.userId = null;
+    }
+  }
+  next();
+}
+
+export { optionalAuth, requireAuth };

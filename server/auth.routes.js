@@ -1,28 +1,15 @@
-const express = require('express');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const prisma = require('./prisma');
+import express from 'express';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import prisma from './prisma.js';
+import { loginSchema, registerSchema, validate } from './validation.js';
 
 const router = express.Router();
 const SALT_ROUNDS = 10;
 
 // POST /api/auth/register
-router.post('/register', async (req, res) => {
-  const username = typeof req.body.username === 'string' ? req.body.username.trim() : '';
-  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-  const password = req.body.password;
-
-  if (!username || !email || !password) {
-    return res.status(400).json({ error: 'username, email, and password are required' });
-  }
-
-  if (password.length < 8) {
-    return res.status(400).json({ error: 'Password must be at least 8 characters' });
-  }
-
-  if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) {
-    return res.status(400).json({ error: 'Username must be 3–24 letters, numbers, or underscores' });
-  }
+router.post('/register', validate(registerSchema), async (req, res) => {
+  const { username, email, password } = req.validatedBody;
 
   try {
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -41,19 +28,13 @@ router.post('/register', async (req, res) => {
     if (err.code === 'P2002') {
       return res.status(409).json({ error: 'Username or email already taken' });
     }
-    console.error(err);
-    res.status(500).json({ error: 'Something went wrong creating your account' });
+    throw err;
   }
 });
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
-  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-  const password = req.body.password;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'email and password are required' });
-  }
+router.post('/login', validate(loginSchema), async (req, res) => {
+  const { email, password } = req.validatedBody;
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
@@ -75,9 +56,8 @@ router.post('/login', async (req, res) => {
       token,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Something went wrong logging in' });
+    throw err;
   }
 });
 
-module.exports = router;
+export default router;

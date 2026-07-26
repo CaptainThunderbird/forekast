@@ -1,40 +1,82 @@
 # Forekast
 
-Forekast is a small social forecasting app built with React, Express, PostgreSQL, and Prisma.
+Forekast is a social forecasting MVP. People publish testable predictions,
+follow forecasters, signal useful forecasts, report outcomes with evidence, and
+build a public accuracy record.
 
-## Run it locally
+## MVP features
 
-1. Copy `.env.example` to `server/.env`.
-2. Replace `DATABASE_URL` with your PostgreSQL connection string and set a long, random `JWT_SECRET`.
-3. In one terminal:
+- Account registration and sign-in
+- Structured forecasts with reasoning, category, and target date
+- Public timeline and followed-user feed
+- Category and status filters
+- Public profiles and editable biographies
+- Follow/unfollow and forecast signals
+- Author-reported resolution with an optional evidence link
+- Profile accuracy based on correct and incorrect resolved forecasts
+- Owner-only deletion of open forecasts
+
+## Local setup
+
+You need Node.js and PostgreSQL.
+
+1. Copy `server/.env.example` to `server/.env`.
+2. Put your PostgreSQL connection string and a long random JWT secret in
+   `server/.env`.
+3. Install dependencies:
 
    ```powershell
-   cd server
    npm install
-   npm run generate
-   npx prisma migrate dev --schema=schema.prisma --name init
-   npm run dev
+   npm --prefix client install
+   npm --prefix server install
    ```
 
-4. In a second terminal:
+4. Create the database tables and generate the database client:
 
    ```powershell
-   cd client
-   npm install
-   npm run dev
+   npm --prefix server run migrate:deploy
+   npm --prefix server run generate
    ```
 
-5. Open `http://localhost:5173`.
+5. Start the API in one terminal:
 
-The API runs on `http://localhost:5001` by default. Set `VITE_API_URL` in
-`client/.env` if the API is hosted somewhere else.
+   ```powershell
+   npm run dev:server
+   ```
 
-## Available features
+6. Start the website in a second terminal:
 
-- Create an account and sign in
-- Publish forecasts up to 280 characters
-- View the public timeline
-- View a personal feed containing your posts and posts from followed users
+   ```powershell
+   npm run dev:client
+   ```
 
-The database already supports likes and follows; controls for those are a good
-next feature.
+7. Open `http://localhost:5173`.
+
+The API runs at `http://localhost:5001`. For a remotely hosted API, create
+`client/.env` and set `VITE_API_URL=https://your-api.example/api`.
+
+## Verification
+
+Run the complete local check:
+
+```powershell
+npm run validate
+```
+
+This runs the backend contract tests, frontend lint, and production build.
+
+## Deployment checklist
+
+- Use separate development and production PostgreSQL databases.
+- Set `DATABASE_URL`, `JWT_SECRET`, `CLIENT_URL`, and `PORT` on the API host.
+- Set `VITE_API_URL` before building the production frontend.
+- Run `npm --prefix server run migrate:deploy` during deployment.
+- Serve the frontend over HTTPS.
+- Configure database backups and application error monitoring.
+
+## Current boundary
+
+The migration is ready, but it has not been applied to a real database in this
+workspace because no `server/.env` credentials are present. Database-backed
+registration, posting, following, signaling, and resolution should be exercised
+after that connection is configured.
