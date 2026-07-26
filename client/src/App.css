@@ -110,6 +110,7 @@ dd { margin: 4px 0 0; font-weight: 600; }
 .profile-history article { display: flex; grid-template-columns: none; align-items: flex-start; justify-content: space-between; gap: 20px; }
 .profile-history article span, .profile-history time { color: #73766f; font-size: .68rem; letter-spacing: .06em; }
 .profile-history article p { margin: 7px 0 0; font-family: 'Playfair Display', serif; font-size: 1.15rem; }
+.profile-history article small { display: block; margin-top: 7px; color: #73766f; font-size: .72rem; }
 .landing-launch .primary { display: inline-block; justify-self: start; text-decoration: none; margin-top: 8px; }
 .landing-feed-legacy { display: none; }
 
@@ -164,6 +165,20 @@ dd { margin: 4px 0 0; font-weight: 600; }
 .forecast-footer { display: flex; gap: 14px; align-items: center; color: #777970; font-size: .62rem; text-transform: uppercase; letter-spacing: .05em; }
 .forecast-footer button { border: 0; background: none; padding: 0; color: inherit; text-transform: inherit; letter-spacing: inherit; }
 .forecast-footer button.signaled { color: #ed6b4e; }
+.forecast-footer button.reposted { color: #3d8463; }
+.detail-actions { display: flex; gap: 10px; margin-top: 22px; }
+.detail-actions button { border: 1px solid #b9b6ae; border-radius: 999px; background: transparent; padding: 7px 12px; color: #5c625d; }
+.detail-actions button.active { border-color: #3d8463; color: #286449; background: #e4eee8; }
+.comments-section { margin-top: 28px; padding-top: 24px; border-top: 1px solid #c8c5bc; }
+.comments-section h3 { font-size: 1.35rem; }
+.comment-form { display: grid; gap: 10px; margin: 16px 0 22px; }
+.comment-form textarea { min-height: 76px; font-size: .9rem; }
+.comment-form .primary { justify-self: end; padding: 8px 16px; }
+.comment-list article { grid-template-columns: 36px 1fr; gap: 10px; padding: 14px 0; }
+.comment-list .avatar { width: 36px; height: 36px; }
+.comment-author { border: 0; padding: 0; background: none; font-weight: 700; color: #252824; }
+.comment-list p { margin: 5px 0; line-height: 1.5; }
+.comment-list time { color: #777970; font-size: .65rem; }
 .feed-context { padding: 28px 20px; }
 .context-card { border: 1px solid #c8c4b9; background: #faf8f2; padding: 22px; margin-bottom: 16px; }
 .context-card h2 { font-size: 1.65rem; line-height: 1.05; }

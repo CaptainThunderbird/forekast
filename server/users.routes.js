@@ -30,7 +30,28 @@ router.get('/:username', optionalAuth, async (req, res) => {
       forecasts: {
         orderBy: { createdAt: 'desc' },
         take: 20,
-        include: { _count: { select: { signals: true } } },
+        include: { _count: { select: { signals: true, comments: true, reposts: true } } },
+      },
+      comments: {
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        include: {
+          forecast: {
+            select: { id: true, statement: true, category: true, user: { select: { username: true } } },
+          },
+        },
+      },
+      reposts: {
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        include: {
+          forecast: {
+            include: {
+              user: { select: { id: true, username: true, avatarUrl: true } },
+              _count: { select: { signals: true, comments: true, reposts: true } },
+            },
+          },
+        },
       },
     },
   });

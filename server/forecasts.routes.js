@@ -1,7 +1,9 @@
 import express from 'express';
 import prisma from './prisma.js';
 import { optionalAuth, requireAuth } from './auth.js';
-import { forecastSchema, resolutionSchema, validate } from './validation.js';
+import { commentSchema, forecastSchema, resolutionSchema, validate } from './validation.js';
+
+const engagementCount = { select: { signals: true, comments: true, reposts: true } };
 
 const router = express.Router();
 
@@ -18,8 +20,9 @@ router.get('/', optionalAuth, async (_req, res) => {
       take: 50,
       include: {
         user: { select: { id: true, username: true, avatarUrl: true } },
-        _count: { select: { signals: true } },
+        _count: engagementCount,
         ...(_req.userId ? { signals: { where: { userId: _req.userId }, select: { id: true } } } : {}),
+        ...(_req.userId ? { reposts: { where: { userId: _req.userId }, select: { userId: true } } } : {}),
         resolution: true,
       },
     });
@@ -45,8 +48,9 @@ router.get('/feed', requireAuth, async (req, res) => {
       take: 50,
       include: {
         user: { select: { id: true, username: true, avatarUrl: true } },
-        _count: { select: { signals: true } },
+        _count: engagementCount,
         signals: { where: { userId: req.userId }, select: { id: true } },
+        reposts: { where: { userId: req.userId }, select: { userId: true } },
         resolution: true,
       },
     });
@@ -63,9 +67,15 @@ router.get('/:id', optionalAuth, async (req, res) => {
       where: { id: req.params.id },
       include: {
         user: { select: { id: true, username: true, bio: true, avatarUrl: true } },
-        _count: { select: { signals: true } },
+        _count: engagementCount,
         ...(req.userId ? { signals: { where: { userId: req.userId }, select: { id: true } } } : {}),
+        ...(req.userId ? { reposts: { where: { userId: req.userId }, select: { userId: true } } } : {}),
         resolution: true,
+        comments: {
+          orderBy: { createdAt: 'asc' },
+          take: 100,
+          include: { user: { select: { id: true, username: true, avatarUrl: true } } },
+        },
       },
     });
 
@@ -85,7 +95,7 @@ router.post('/', requireAuth, validate(forecastSchema), async (req, res) => {
       data: { userId: req.userId, statement, reasoning, category, targetDate },
       include: {
         user: { select: { id: true, username: true, avatarUrl: true } },
-        _count: { select: { signals: true } },
+        _count: engagementCount,
       },
     });
     res.status(201).json(forecast);
@@ -132,7 +142,7 @@ router.post('/:id/resolve', requireAuth, validate(resolutionSchema), async (req,
       data: { status: req.validatedBody.result, resolvedAt },
       include: {
         user: { select: { id: true, username: true, avatarUrl: true } },
-        _count: { select: { signals: true } },
+        _count: engagementCount,
         resolution: true,
       },
     }),
@@ -157,6 +167,35 @@ router.delete('/:id/signal', requireAuth, async (req, res) => {
   await prisma.signal.deleteMany({
     where: { userId: req.userId, forecastId: req.params.id },
   });
+  res.status(204).send();
+});
+
+router.post('/:id/comments', requireAuth, validate(commentSchema), async (req, res) => {
+  const forecast = await prisma.forecast.findUnique({ where: { id: req.params.id }, select: { id: true } });
+  if (!forecast) return res.status(404).json({ error: 'Forekast not found' });
+
+  const comment = await prisma.comment.create({
+    data: { content: req.validatedBody.content, userId: req.userId, forecastId: forecast.id },
+    include: { user: { select: { id: true, username: true, avatarUrl: true } } },
+  });
+  res.status(201).json(comment);
+});
+
+router.post('/:id/repost', requireAuth, async (req, res) => {
+  const forecast = await prisma.forecast.findUnique({ where: { id: req.params.id }, select: { id: true, userId: true } });
+  if (!forecast) return res.status(404).json({ error: 'Forekast not found' });
+  if (forecast.userId === req.userId) return res.status(400).json({ error: 'You cannot repost your own forekast' });
+
+  await prisma.repost.upsert({
+    where: { userId_forecastId: { userId: req.userId, forecastId: forecast.id } },
+    update: {},
+    create: { userId: req.userId, forecastId: forecast.id },
+  });
+  res.status(201).json({ reposted: true });
+});
+
+router.delete('/:id/repost', requireAuth, async (req, res) => {
+  await prisma.repost.deleteMany({ where: { userId: req.userId, forecastId: req.params.id } });
   res.status(204).send();
 });
 

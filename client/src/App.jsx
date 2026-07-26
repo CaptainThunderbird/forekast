@@ -31,6 +31,7 @@ function App() {
   const [bioDraft, setBioDraft] = useState('')
   const [avatarDraft, setAvatarDraft] = useState('')
   const [resolutionDraft, setResolutionDraft] = useState({ result: 'CORRECT', explanation: '', sourceUrl: '' })
+  const [commentDraft, setCommentDraft] = useState('')
   const [composerExpanded, setComposerExpanded] = useState(false)
 
   async function request(path, options = {}) {
@@ -214,6 +215,60 @@ function App() {
     }
   }
 
+  async function openForekast(forekast) {
+    setMessage('')
+    try {
+      const detail = await request(`/forecasts/${forekast.id}`)
+      setSelected(detail)
+      setCommentDraft('')
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
+  async function addComment(event) {
+    event.preventDefault()
+    if (!session) return setMessage('Sign in to comment')
+    if (!commentDraft.trim()) return
+    setBusy(true)
+    try {
+      const comment = await request(`/forecasts/${selected.id}/comments`, {
+        method: 'POST',
+        body: JSON.stringify({ content: commentDraft }),
+      })
+      const update = (item) => item.id === selected.id ? {
+        ...item,
+        comments: [...(item.comments || []), comment],
+        _count: { ...item._count, comments: (item._count?.comments || 0) + 1 },
+      } : item
+      setSelected((current) => update(current))
+      setForecasts((current) => current.map(update))
+      setCommentDraft('')
+    } catch (error) {
+      setMessage(error.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function toggleRepost(forekast) {
+    if (!session) return setMessage('Sign in to repost forekasts')
+    if (forekast.user.id === session.user.id) return setMessage('You cannot repost your own forekast')
+    const reposted = Boolean(forekast.reposts?.length)
+    try {
+      await request(`/forecasts/${forekast.id}/repost`, { method: reposted ? 'DELETE' : 'POST' })
+      const update = (item) => item.id === forekast.id ? {
+        ...item,
+        reposts: reposted ? [] : [{ userId: session.user.id }],
+        _count: { ...item._count, reposts: Math.max(0, (item._count?.reposts || 0) + (reposted ? -1 : 1)) },
+      } : item
+      setForecasts((current) => current.map(update))
+      setSelected((current) => current?.id === forekast.id ? update(current) : current)
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
   async function resolveForecast(event) {
     event.preventDefault()
     setBusy(true)
@@ -270,6 +325,11 @@ function App() {
         logout={logout}
         openProfile={openProfile}
         toggleSignal={toggleSignal}
+        toggleRepost={toggleRepost}
+        openForekast={openForekast}
+        addComment={addComment}
+        commentDraft={commentDraft}
+        setCommentDraft={setCommentDraft}
         selected={selected}
         setSelected={setSelected}
         profile={profile}
@@ -361,7 +421,7 @@ function App() {
                 <button className={`signal-button ${forecast.signals?.length ? 'active' : ''}`} onClick={() => toggleSignal(forecast)}>
                   {forecast.signals?.length ? '◆' : '◇'} {forecast._count?.signals || forecast._count?.likes || 0} signals
                 </button>
-                <button className="text-button details-button" onClick={() => setSelected(forecast)}>View details</button>
+                <button className="text-button details-button" onClick={() => openForekast(forecast)}>View details</button>
               </div>
             </article>
           ))}

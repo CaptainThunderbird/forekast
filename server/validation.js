@@ -53,6 +53,10 @@ export const resolutionSchema = z.object({
   sourceUrl: z.union([z.literal(''), z.string().trim().url('Enter a valid evidence URL')]).optional(),
 }).strict().transform((data) => ({ ...data, sourceUrl: data.sourceUrl || null }));
 
+export const commentSchema = z.object({
+  content: z.string().trim().min(1, 'A comment cannot be empty').max(500, 'A comment cannot exceed 500 characters'),
+}).strict();
+
 export function validate(schema) {
   return (req, res, next) => {
     const result = schema.safeParse(req.body);

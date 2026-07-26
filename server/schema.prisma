@@ -21,6 +21,8 @@ model User {
 
   forecasts     Forecast[]
   signals       Signal[]
+  comments      Comment[]
+  reposts       Repost[]
 
   // Self-referencing many-to-many for follows.
   // "following" = the users THIS user follows
@@ -45,6 +47,8 @@ model Forecast {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   signals   Signal[]
+  comments  Comment[]
+  reposts   Repost[]
   resolution Resolution?
 
   @@index([userId])
@@ -111,4 +115,30 @@ model Follow {
   // the pair itself is the primary key — can't follow the same person twice
   @@id([followerId, followingId])
   @@map("follows")
+}
+
+model Comment {
+  id         String   @id @default(uuid())
+  content    String   @db.VarChar(500)
+  createdAt  DateTime @default(now())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  forecastId String
+  forecast   Forecast @relation(fields: [forecastId], references: [id], onDelete: Cascade)
+
+  @@index([forecastId, createdAt])
+  @@index([userId, createdAt])
+  @@map("comments")
+}
+
+model Repost {
+  createdAt  DateTime @default(now())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  forecastId String
+  forecast   Forecast @relation(fields: [forecastId], references: [id], onDelete: Cascade)
+
+  @@id([userId, forecastId])
+  @@index([forecastId])
+  @@map("reposts")
 }
