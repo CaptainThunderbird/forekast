@@ -14,7 +14,8 @@ function Avatar({ user, button = false }) {
 export default function FeedPage({
   session, forecasts, draft, setDraft, filters, setFilters, message, busy,
   composerExpanded, setComposerExpanded, publish, logout, openProfile,
-  toggleSignal, selected, setSelected, profile, setProfile, minTargetDate,
+  toggleSignal, toggleRepost, openForekast, addComment, commentDraft, setCommentDraft,
+  selected, setSelected, profile, setProfile, minTargetDate,
 }) {
   return (
     <div className="feed-app">
@@ -90,7 +91,7 @@ export default function FeedPage({
         {message && <p className="message" role="alert">{message}</p>}
 
         <div className="stream-tools">
-          <strong>{session ? 'Your timeline' : 'Public timeline'}</strong>
+          <strong>Latest forekasts</strong>
           <div>
             <select aria-label="Filter by category" value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value })}>
               <option value="">All categories</option>
@@ -113,13 +114,15 @@ export default function FeedPage({
                   <span>· {new Date(forecast.createdAt).toLocaleDateString()}</span>
                   <span className={`mini-status ${String(forecast.status || 'OPEN').toLowerCase()}`}>{forecast.status || 'OPEN'}</span>
                 </div>
-                <button className="forecast-statement" onClick={() => setSelected(forecast)}>{forecast.statement || forecast.content}</button>
+                <button className="forecast-statement" onClick={() => openForekast(forecast)}>{forecast.statement || forecast.content}</button>
                 {forecast.reasoning && <p className="forecast-reasoning">{forecast.reasoning}</p>}
                 <div className="forecast-footer">
                   <span>{categoryLabel(forecast.category)}</span>
                   <span>Resolves {forecast.targetDate ? new Date(forecast.targetDate).toLocaleDateString() : 'later'}</span>
                   <button className={forecast.signals?.length ? 'signaled' : ''} onClick={() => toggleSignal(forecast)}>{forecast.signals?.length ? '◆' : '◇'} {forecast._count?.signals || 0}</button>
-                  <button onClick={() => setSelected(forecast)}>Details</button>
+                  <button onClick={() => openForekast(forecast)}>Reply · {forecast._count?.comments || 0}</button>
+                  <button className={forecast.reposts?.length ? 'reposted' : ''} onClick={() => toggleRepost(forecast)}>↻ {forecast._count?.reposts || 0}</button>
+                  <button onClick={() => openForekast(forecast)}>Details</button>
                 </div>
               </div>
             </article>
@@ -149,6 +152,31 @@ export default function FeedPage({
               <div><dt>Target date</dt><dd>{selected.targetDate ? new Date(selected.targetDate).toLocaleDateString() : 'Not set'}</dd></div>
             </dl>
             {selected.resolution && <div className="resolution-box"><p className="eyebrow">AUTHOR-REPORTED OUTCOME</p><h3>{selected.resolution.result}</h3><p>{selected.resolution.explanation}</p></div>}
+            <div className="detail-actions">
+              <button className={selected.signals?.length ? 'active' : ''} onClick={() => toggleSignal(selected)}>◇ {selected._count?.signals || 0} signals</button>
+              <button className={selected.reposts?.length ? 'active' : ''} onClick={() => toggleRepost(selected)}>↻ {selected._count?.reposts || 0} reposts</button>
+            </div>
+            <section className="comments-section">
+              <h3>Comments · {selected._count?.comments || 0}</h3>
+              {session ? (
+                <form className="comment-form" onSubmit={addComment}>
+                  <textarea maxLength="500" required value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} placeholder="Write a comment…" />
+                  <button className="primary" disabled={busy || !commentDraft.trim()}>Reply</button>
+                </form>
+              ) : <p className="empty">Sign in to join the conversation.</p>}
+              <div className="comment-list">
+                {selected.comments?.length ? selected.comments.map((comment) => (
+                  <article key={comment.id}>
+                    <Avatar user={comment.user} button />
+                    <div>
+                      <button className="comment-author" onClick={() => openProfile(comment.user.username)}>@{comment.user.username}</button>
+                      <p>{comment.content}</p>
+                      <time>{new Date(comment.createdAt).toLocaleString()}</time>
+                    </div>
+                  </article>
+                )) : <p className="empty">No comments yet.</p>}
+              </div>
+            </section>
           </section>
         </div>
       )}

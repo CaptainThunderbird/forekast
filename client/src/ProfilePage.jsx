@@ -115,6 +115,33 @@ export default function ProfilePage({
                 </article>
               )) : <p className="empty">No forekasts yet.</p>}
             </section>
+
+            <section className="profile-history">
+              <h2>Comments</h2>
+              {profile.comments.length ? profile.comments.map((comment) => (
+                <article key={comment.id}>
+                  <div>
+                    <span>REPLY TO @{comment.forecast.user.username} · {categoryLabel(comment.forecast.category)}</span>
+                    <p>{comment.content}</p>
+                    <small>On “{comment.forecast.statement}”</small>
+                  </div>
+                  <time>{new Date(comment.createdAt).toLocaleDateString()}</time>
+                </article>
+              )) : <p className="empty">No comments yet.</p>}
+            </section>
+
+            <section className="profile-history">
+              <h2>Reposts</h2>
+              {profile.reposts.length ? profile.reposts.map((repost) => (
+                <article key={repost.forecastId}>
+                  <div>
+                    <span>REPOSTED FROM @{repost.forecast.user.username} · {categoryLabel(repost.forecast.category)}</span>
+                    <p>{repost.forecast.statement}</p>
+                  </div>
+                  <time>{new Date(repost.createdAt).toLocaleDateString()}</time>
+                </article>
+              )) : <p className="empty">No reposts yet.</p>}
+            </section>
           </>
         )}
       </main>
