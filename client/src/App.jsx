@@ -260,7 +260,6 @@ function App() {
 
   async function toggleRepost(forekast) {
     if (!session) return setMessage('Sign in to repost forekasts')
-    if (forekast.user.id === session.user.id) return setMessage('You cannot repost your own forekast')
     const reposted = Boolean(forekast.reposts?.length)
     try {
       await request(`/forecasts/${forekast.id}/repost`, { method: reposted ? 'DELETE' : 'POST' })

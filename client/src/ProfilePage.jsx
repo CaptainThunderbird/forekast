@@ -15,6 +15,26 @@ export default function ProfilePage({
 }) {
   const isOwner = Boolean(session?.user.id && profile?.id === session.user.id)
   const [photoError, setPhotoError] = useState('')
+  const activity = profile ? [
+    ...profile.forecasts.map((item) => ({
+      id: `forekast-${item.id}`,
+      content: item.statement,
+      category: item.category,
+      createdAt: item.createdAt,
+    })),
+    ...profile.comments.map((item) => ({
+      id: `comment-${item.id}`,
+      content: item.content,
+      category: item.forecast.category,
+      createdAt: item.createdAt,
+    })),
+    ...profile.reposts.map((item) => ({
+      id: `repost-${item.forecastId}`,
+      content: item.forecast.statement,
+      category: item.forecast.category,
+      createdAt: item.createdAt,
+    })),
+  ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) : []
 
   async function choosePhoto(event) {
     const file = event.target.files?.[0]
@@ -104,43 +124,16 @@ export default function ProfilePage({
             </dl>
 
             <section className="profile-history">
-              <h2>Recent forekasts</h2>
-              {profile.forecasts.length ? profile.forecasts.map((forekast) => (
-                <article key={forekast.id}>
+              <h2>Recent activity</h2>
+              {activity.length ? activity.map((item) => (
+                <article key={item.id}>
                   <div>
-                    <span>{categoryLabel(forekast.category)} · {forekast.status}</span>
-                    <p>{forekast.statement}</p>
+                    <span>{categoryLabel(item.category)}</span>
+                    <p>{item.content}</p>
                   </div>
-                  <time>{new Date(forekast.createdAt).toLocaleDateString()}</time>
+                  <time>{new Date(item.createdAt).toLocaleDateString()}</time>
                 </article>
-              )) : <p className="empty">No forekasts yet.</p>}
-            </section>
-
-            <section className="profile-history">
-              <h2>Comments</h2>
-              {profile.comments.length ? profile.comments.map((comment) => (
-                <article key={comment.id}>
-                  <div>
-                    <span>REPLY TO @{comment.forecast.user.username} · {categoryLabel(comment.forecast.category)}</span>
-                    <p>{comment.content}</p>
-                    <small>On “{comment.forecast.statement}”</small>
-                  </div>
-                  <time>{new Date(comment.createdAt).toLocaleDateString()}</time>
-                </article>
-              )) : <p className="empty">No comments yet.</p>}
-            </section>
-
-            <section className="profile-history">
-              <h2>Reposts</h2>
-              {profile.reposts.length ? profile.reposts.map((repost) => (
-                <article key={repost.forecastId}>
-                  <div>
-                    <span>REPOSTED FROM @{repost.forecast.user.username} · {categoryLabel(repost.forecast.category)}</span>
-                    <p>{repost.forecast.statement}</p>
-                  </div>
-                  <time>{new Date(repost.createdAt).toLocaleDateString()}</time>
-                </article>
-              )) : <p className="empty">No reposts yet.</p>}
+              )) : <p className="empty">No activity yet.</p>}
             </section>
           </>
         )}
