@@ -182,9 +182,8 @@ router.post('/:id/comments', requireAuth, validate(commentSchema), async (req, r
 });
 
 router.post('/:id/repost', requireAuth, async (req, res) => {
-  const forecast = await prisma.forecast.findUnique({ where: { id: req.params.id }, select: { id: true, userId: true } });
+  const forecast = await prisma.forecast.findUnique({ where: { id: req.params.id }, select: { id: true } });
   if (!forecast) return res.status(404).json({ error: 'Forekast not found' });
-  if (forecast.userId === req.userId) return res.status(400).json({ error: 'You cannot repost your own forekast' });
 
   await prisma.repost.upsert({
     where: { userId_forecastId: { userId: req.userId, forecastId: forecast.id } },
