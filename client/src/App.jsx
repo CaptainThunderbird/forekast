@@ -9,6 +9,7 @@ const PAGE_LOAD_TIME = Date.now()
 const categoryLabel = (category) => category === 'FICTION_MEDIA' ? 'FICTION & MEDIA' : category
 
 function App() {
+  const [currentPath, setCurrentPath] = useState(window.location.pathname)
   const [session, setSession] = useState(() => {
     try { return JSON.parse(localStorage.getItem('forekast-session')) }
     catch { return null }
@@ -34,6 +35,12 @@ function App() {
   const [commentDraft, setCommentDraft] = useState('')
   const [composerExpanded, setComposerExpanded] = useState(false)
 
+  function navigate(path, { replace = false } = {}) {
+    window.history[replace ? 'replaceState' : 'pushState']({}, '', path)
+    setCurrentPath(path)
+    window.scrollTo(0, 0)
+  }
+
   async function request(path, options = {}) {
     const response = await fetch(`${API_URL}${path}`, {
       ...options,
@@ -54,7 +61,7 @@ function App() {
   useEffect(() => {
     const headers = session?.token ? { Authorization: `Bearer ${session.token}` } : {}
     const query = new URLSearchParams(Object.entries(filters).filter(([, value]) => value)).toString()
-    const path = session && !query ? '/forecasts/feed' : `/forecasts${query ? `?${query}` : ''}`
+    const path = `/forecasts${query ? `?${query}` : ''}`
     fetch(`${API_URL}${path}`, { headers })
       .then(async (response) => {
         const data = await response.json()
@@ -65,8 +72,8 @@ function App() {
       .catch((error) => setMessage(error.message))
   }, [session, filters])
 
-  const profileUsername = window.location.pathname.startsWith('/profile/')
-    ? decodeURIComponent(window.location.pathname.slice('/profile/'.length))
+  const profileUsername = currentPath.startsWith('/profile/')
+    ? decodeURIComponent(currentPath.slice('/profile/'.length))
     : ''
 
   useEffect(() => {
@@ -98,9 +105,9 @@ function App() {
         body: JSON.stringify(payload),
       })
       localStorage.setItem('forekast-session', JSON.stringify(data))
-      setSession(data)
       setForm({ username: '', email: '', password: '' })
-      window.location.href = '/feed'
+      navigate('/feed', { replace: true })
+      setSession(data)
     } catch (error) {
       setMessage(error.message)
     } finally {
@@ -150,7 +157,7 @@ function App() {
   }
 
   function openProfile(username) {
-    window.location.href = `/profile/${encodeURIComponent(username)}`
+    navigate(`/profile/${encodeURIComponent(username)}`)
   }
 
   async function saveProfile(event) {
@@ -308,7 +315,7 @@ function App() {
     )
   }
 
-  if (window.location.pathname === '/feed') {
+  if (currentPath === '/feed') {
     return (
       <FeedPage
         session={session}

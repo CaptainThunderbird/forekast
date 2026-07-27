@@ -91,7 +91,7 @@ export default function FeedPage({
         {message && <p className="message" role="alert">{message}</p>}
 
         <div className="stream-tools">
-          <strong>{session ? 'Your timeline' : 'Public timeline'}</strong>
+          <strong>Latest forekasts</strong>
           <div>
             <select aria-label="Filter by category" value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value })}>
               <option value="">All categories</option>

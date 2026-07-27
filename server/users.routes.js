@@ -29,12 +29,12 @@ router.get('/:username', optionalAuth, async (req, res) => {
       _count: { select: { forecasts: true, followers: true, following: true } },
       forecasts: {
         orderBy: { createdAt: 'desc' },
-        take: 20,
+        take: 100,
         include: { _count: { select: { signals: true, comments: true, reposts: true } } },
       },
       comments: {
         orderBy: { createdAt: 'desc' },
-        take: 20,
+        take: 100,
         include: {
           forecast: {
             select: { id: true, statement: true, category: true, user: { select: { username: true } } },
@@ -43,7 +43,7 @@ router.get('/:username', optionalAuth, async (req, res) => {
       },
       reposts: {
         orderBy: { createdAt: 'desc' },
-        take: 20,
+        take: 100,
         include: {
           forecast: {
             include: {
