@@ -1,6 +1,5 @@
 import { useState } from 'react'
-
-const categoryLabel = (category) => category === 'FICTION_MEDIA' ? 'FICTION & MEDIA' : category
+import { categoryLabel } from './lib/categories'
 
 function Avatar({ user, large = false }) {
   const className = `avatar${large ? ' large' : ''}`

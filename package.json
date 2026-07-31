@@ -2,6 +2,9 @@
   "name": "forekast",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.12 <25"
+  },
   "scripts": {
     "dev:client": "npm --prefix client run dev",
     "dev:server": "npm --prefix server run dev",

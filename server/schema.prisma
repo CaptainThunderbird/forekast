@@ -23,6 +23,7 @@ model User {
   signals       Signal[]
   comments      Comment[]
   reposts       Repost[]
+  analyticsEvents AnalyticsEvent[]
 
   // Self-referencing many-to-many for follows.
   // "following" = the users THIS user follows
@@ -141,4 +142,18 @@ model Repost {
   @@id([userId, forecastId])
   @@index([forecastId])
   @@map("reposts")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid())
+  eventName String   @db.VarChar(64)
+  userId    String?
+  entityId  String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([eventName, createdAt])
+  @@index([userId, createdAt])
+  @@map("analytics_events")
 }
