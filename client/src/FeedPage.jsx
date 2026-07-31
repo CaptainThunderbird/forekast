@@ -1,6 +1,7 @@
-const CATEGORIES = ['TECHNOLOGY', 'BUSINESS', 'SCIENCE', 'POLITICS', 'SPORTS', 'CULTURE', 'FICTION_MEDIA', 'OTHER']
+import { useEffect } from 'react'
+import { CATEGORY_OPTIONS, categoryLabel } from './lib/categories'
+
 const STATUSES = ['OPEN', 'CORRECT', 'INCORRECT', 'INCONCLUSIVE']
-const categoryLabel = (category) => category === 'FICTION_MEDIA' ? 'FICTION & MEDIA' : category
 
 function Avatar({ user, button = false }) {
   const content = user.avatarUrl
@@ -17,6 +18,23 @@ export default function FeedPage({
   toggleSignal, toggleRepost, openForekast, addComment, commentDraft, setCommentDraft,
   selected, setSelected, profile, setProfile, minTargetDate,
 }) {
+  useEffect(() => {
+    if (!selected && !profile) return undefined
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') {
+        setSelected(null)
+        setProfile(null)
+      }
+    }
+    document.addEventListener('keydown', closeOnEscape)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [profile, selected, setProfile, setSelected])
+
   return (
     <div className="feed-app">
       <aside className="feed-sidebar">
@@ -71,7 +89,7 @@ export default function FeedPage({
                 <div className="compact-fields">
                   <label>Category
                     <select value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })}>
-                      {CATEGORIES.map((category) => <option key={category} value={category}>{categoryLabel(category)}</option>)}
+                      {CATEGORY_OPTIONS.map((category) => <option key={category.value} value={category.value}>{category.label}</option>)}
                     </select>
                   </label>
                   <label>Target date
@@ -95,7 +113,7 @@ export default function FeedPage({
           <div>
             <select aria-label="Filter by category" value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value })}>
               <option value="">All categories</option>
-              {CATEGORIES.map((category) => <option key={category} value={category}>{categoryLabel(category)}</option>)}
+              {CATEGORY_OPTIONS.map((category) => <option key={category.value} value={category.value}>{category.label}</option>)}
             </select>
             <select aria-label="Filter by status" value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })}>
               <option value="">All statuses</option>

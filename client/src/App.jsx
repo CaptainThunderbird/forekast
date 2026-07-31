@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import FeedPage from './FeedPage'
 import ProfilePage from './ProfilePage'
+import { CATEGORY_OPTIONS, categoryLabel } from './lib/categories'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
 const MIN_TARGET_DATE = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
 const PAGE_LOAD_TIME = Date.now()
-const categoryLabel = (category) => category === 'FICTION_MEDIA' ? 'FICTION & MEDIA' : category
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
@@ -400,7 +400,7 @@ function App() {
           <label>Category
             <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
               <option value="">All categories</option>
-              {['TECHNOLOGY', 'BUSINESS', 'SCIENCE', 'POLITICS', 'SPORTS', 'CULTURE', 'FICTION_MEDIA', 'OTHER'].map((category) => <option key={category} value={category}>{categoryLabel(category)}</option>)}
+              {CATEGORY_OPTIONS.map((category) => <option key={category.value} value={category.value}>{category.label}</option>)}
             </select>
           </label>
           <label>Status

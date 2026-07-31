@@ -1,5 +1,6 @@
 import express from 'express';
 import prisma from './prisma.js';
+import { analyticsEventData, recordEvent } from './analytics.js';
 import { optionalAuth, requireAuth } from './auth.js';
 import { commentSchema, forecastSchema, resolutionSchema, validate } from './validation.js';
 
@@ -26,6 +27,9 @@ router.get('/', optionalAuth, async (_req, res) => {
         resolution: true,
       },
     });
+    if (_req.userId && (_req.query.category || _req.query.status)) {
+      await recordEvent(prisma, 'feed_filter_used', _req.userId);
+    }
     res.json(forecasts);
   } catch (error) {
     console.error('Error fetching timeline:', error);
@@ -80,6 +84,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     });
 
     if (!forecast) return res.status(404).json({ error: 'Forekast not found' });
+    await recordEvent(prisma, 'prediction_viewed', req.userId, forecast.id);
     res.json(forecast);
   } catch (error) {
     if (error?.code === 'P2023') return res.status(400).json({ error: 'Invalid forekast ID' });
@@ -91,12 +96,18 @@ router.post('/', requireAuth, validate(forecastSchema), async (req, res) => {
   const { statement, reasoning, category, targetDate } = req.validatedBody;
 
   try {
-    const forecast = await prisma.forecast.create({
-      data: { userId: req.userId, statement, reasoning, category, targetDate },
-      include: {
-        user: { select: { id: true, username: true, avatarUrl: true } },
-        _count: engagementCount,
-      },
+    const forecast = await prisma.$transaction(async (transaction) => {
+      const createdForecast = await transaction.forecast.create({
+        data: { userId: req.userId, statement, reasoning, category, targetDate },
+        include: {
+          user: { select: { id: true, username: true, avatarUrl: true } },
+          _count: engagementCount,
+        },
+      });
+      await transaction.analyticsEvent.create({
+        data: analyticsEventData('prediction_created', req.userId, createdForecast.id),
+      });
+      return createdForecast;
     });
     res.status(201).json(forecast);
   } catch (error) {
@@ -146,6 +157,9 @@ router.post('/:id/resolve', requireAuth, validate(resolutionSchema), async (req,
         resolution: true,
       },
     }),
+    prisma.analyticsEvent.create({
+      data: analyticsEventData('prediction_resolved', req.userId, forecast.id),
+    }),
   ]);
 
   res.status(201).json({ forecast: updatedForecast, resolution });
@@ -178,6 +192,7 @@ router.post('/:id/comments', requireAuth, validate(commentSchema), async (req, r
     data: { content: req.validatedBody.content, userId: req.userId, forecastId: forecast.id },
     include: { user: { select: { id: true, username: true, avatarUrl: true } } },
   });
+  await recordEvent(prisma, 'comment_created', req.userId, forecast.id);
   res.status(201).json(comment);
 });
 
