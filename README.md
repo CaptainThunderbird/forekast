@@ -1,15 +1,20 @@
 # Forekast
 
-Forekast is a social forecasting application for publishing clear, dated
-predictions and returning later to evaluate what happened. It combines a
-compact social feed with structured categories, target dates, discussion,
-reposts, evidence-backed resolution, and public accuracy records.
+**Social forecasting, made testable.** Publish a clear prediction, set the date
+when it can be checked, discuss it, and return to record what happened.
 
-- Website: `https://forekast-lca2.onrender.com`
-- API health check: `https://forekast-api.onrender.com/api/health`
-- Planning: [project plan](docs/PROJECT_PLAN.md),
-  [roadmap](docs/ROADMAP.md), and
-  [technical architecture](docs/ARCHITECTURE.md)
+[![Open the live demo](https://img.shields.io/badge/OPEN_LIVE_DEMO-ED6B4E?style=for-the-badge&logo=render&logoColor=white)](https://forekast-lca2.onrender.com)
+[![API status](https://img.shields.io/badge/API_STATUS-173F35?style=for-the-badge)](https://forekast-api.onrender.com/api/health)
+
+[![Forekast's logged-out landing page with its social forecasting message and account access panel](docs/forekast-live-demo.png)](https://forekast-lca2.onrender.com)
+
+_The live logged-out experience. Select the image to open the deployed app._
+
+Forekast combines a compact social feed with structured categories, target
+dates, discussion, reposts, evidence-backed resolution, and public accuracy
+records. For the reasoning behind the implementation, see the
+[project plan](docs/PROJECT_PLAN.md), [roadmap](docs/ROADMAP.md), and
+[technical architecture](docs/ARCHITECTURE.md).
 
 ## The problem
 
@@ -227,7 +232,7 @@ npm run validate
 
 This runs:
 
-1. Server contract tests
+1. Server tests (contract tests locally, plus the database integration test in CI)
 2. Client ESLint checks
 3. Client production build
 
@@ -240,10 +245,12 @@ npm run build
 npm --prefix server run validate
 ```
 
-Tests use a non-production connection-string placeholder for module
-initialization. Current contract tests avoid database writes. Database-backed
-integration tests against an isolated PostgreSQL instance are a documented
-future improvement.
+Contract tests cover the public HTTP boundary without database writes. CI also
+starts an isolated PostgreSQL service and runs a database-backed registration
+and forekast-creation test, verifying that the forekast and its analytics event
+are committed together. The database test is skipped by default for local runs
+unless `RUN_DATABASE_INTEGRATION_TESTS=true` and a disposable database is
+available.
 
 ## Deployment
 
@@ -340,8 +347,8 @@ category metadata prevents similar label drift.
 
 Work should remain evidence-driven and incremental:
 
-1. Database-backed integration tests for account, creation, commenting,
-   reposting, and resolution flows
+1. Expand database-backed integration coverage to commenting, reposting, and
+   resolution flows
 2. Cursor pagination for timelines and profile activity
 3. Clear loading, retry, offline, and expired-session states
 4. Password reset and email verification

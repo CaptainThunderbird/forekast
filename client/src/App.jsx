@@ -350,17 +350,22 @@ function App() {
       <aside className="brand-panel">
         <a className="brand" href="/" aria-label="Forekast home">FOREKAST<span>.</span></a>
         <div className="brand-copy">
-          <p className="eyebrow">THE SIGNAL BEFORE THE NOISE</p>
-          <h1>Say what’s<br />coming next.</h1>
-          <p>Share ideas, follow sharp minds, and keep your view of tomorrow in one clean feed.</p>
+          <p className="eyebrow">SOCIAL FORECASTING, MADE TESTABLE</p>
+          <h1>Make a claim.<br />Set a date.</h1>
+          <p>Publish a clear prediction, discuss it with real people, and return at the target date to record what happened.</p>
+          <ol className="brand-proof" aria-label="How Forekast works">
+            <li><span>01</span>Write a specific prediction</li>
+            <li><span>02</span>Choose when it can be checked</li>
+            <li><span>03</span>Record the outcome with evidence</li>
+          </ol>
         </div>
-        <p className="edition">LIVE EDITION · 2026</p>
+        <p className="edition">INDEPENDENT PUBLIC BETA · NO ADS</p>
       </aside>
 
       <section className="feed-panel">
         <header>
           <div>
-            <p className="eyebrow">YOUR TIMELINE</p>
+            <p className="eyebrow">CLEAR CLAIMS · DATED OUTCOMES</p>
             <h2>Latest forekasts</h2>
           </div>
           {session && (
@@ -373,7 +378,7 @@ function App() {
 
         {!session ? (
           <form className="auth-card" onSubmit={handleAuth}>
-            <p className="issue">ISSUE 01</p>
+            <p className="issue">ACCOUNT ACCESS</p>
             <h3>{mode === 'login' ? 'Welcome back.' : 'Join the conversation.'}</h3>
             {mode === 'register' && (
               <label>Username<input required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></label>
@@ -395,6 +400,21 @@ function App() {
         )}
 
         {message && <p className="message" role="alert">{message}</p>}
+
+        <section className="trust-strip" aria-label="Forekast trust and privacy details">
+          <div><strong>No ads</strong><span>Your attention is not the product.</span></div>
+          <div><strong>Limited analytics</strong><span>Core actions only—never forekast or comment text.</span></div>
+          <div><strong>Open source</strong><span>The application code and decisions are public.</span></div>
+        </section>
+
+        <footer className="landing-footer">
+          <p>Forekast is an independent beta project. No fake testimonials, urgency timers, or obstructive popups.</p>
+          <nav aria-label="Project information">
+            <a href="https://github.com/CaptainThunderbird/forekast" target="_blank" rel="noreferrer">Source code</a>
+            <a href="https://github.com/CaptainThunderbird/forekast/issues" target="_blank" rel="noreferrer">Feedback &amp; issues</a>
+            <a href="https://forekast-api.onrender.com/api/health" target="_blank" rel="noreferrer">API status</a>
+          </nav>
+        </footer>
 
         <div className="landing-feed-legacy"><div className="filters" aria-label="Forekast filters">
           <label>Category

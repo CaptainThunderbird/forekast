@@ -9,10 +9,25 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: forekast
+          POSTGRES_PASSWORD: forekast
+          POSTGRES_DB: forekast
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U forekast -d forekast"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       DATABASE_URL: postgresql://forekast:forekast@127.0.0.1:5432/forekast
       JWT_SECRET: test-secret-that-is-long-enough-for-ci
       NODE_ENV: test
+      RUN_DATABASE_INTEGRATION_TESTS: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,4 +40,5 @@ jobs:
       - run: npm ci --prefix client
       - run: npm ci --prefix server
       - run: npm run generate --prefix server
+      - run: npm run migrate:deploy --prefix server
       - run: npm run validate
