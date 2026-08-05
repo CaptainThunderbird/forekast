@@ -257,13 +257,16 @@ function App() {
         method: 'POST',
         body: JSON.stringify({ content: commentDraft }),
       })
-      const update = (item) => item.id === selected.id ? {
+      setSelected((current) => ({
+        ...current,
+        comments: [...(current.comments || []), comment],
+        _count: { ...current._count, comments: (current._count?.comments || 0) + 1 },
+      }))
+      setForecasts((current) => current.map((item) => item.id === selected.id ? {
         ...item,
-        comments: [...(item.comments || []), comment],
+        comments: [comment, ...(item.comments || [])].slice(0, 2),
         _count: { ...item._count, comments: (item._count?.comments || 0) + 1 },
-      } : item
-      setSelected((current) => update(current))
-      setForecasts((current) => current.map(update))
+      } : item))
       setCommentDraft('')
     } catch (error) {
       setMessage(error.message)
@@ -298,7 +301,13 @@ function App() {
         method: 'POST',
         body: JSON.stringify(resolutionDraft),
       })
-      const next = { ...data.forecast, signals: selected.signals || [] }
+      const next = {
+        ...selected,
+        ...data.forecast,
+        signals: selected.signals || [],
+        reposts: selected.reposts || [],
+        comments: selected.comments || [],
+      }
       setSelected(next)
       setForecasts((current) => current.map((item) => item.id === next.id ? next : item))
       setResolutionDraft({ result: 'CORRECT', explanation: '', sourceUrl: '' })
@@ -352,6 +361,10 @@ function App() {
         addComment={addComment}
         commentDraft={commentDraft}
         setCommentDraft={setCommentDraft}
+        resolutionDraft={resolutionDraft}
+        setResolutionDraft={setResolutionDraft}
+        resolveForecast={resolveForecast}
+        removeForecast={removeForecast}
         selected={selected}
         setSelected={setSelected}
         profile={profile}
