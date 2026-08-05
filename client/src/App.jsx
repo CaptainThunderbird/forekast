@@ -66,6 +66,12 @@ function App() {
     })
     const data = response.status === 204 ? null : await response.json()
     if (!response.ok) {
+      if (response.status === 401 && session?.token && !path.startsWith('/auth/')) {
+        localStorage.removeItem('forekast-session')
+        setSession(null)
+        navigate('/', { replace: true })
+        throw new Error('Your session expired. Sign in again to continue.')
+      }
       const details = data.details?.map((item) => `${item.field}: ${item.message}`).join(' · ')
       throw new Error(details || data.error || 'Something went wrong')
     }

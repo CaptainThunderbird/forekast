@@ -42,6 +42,19 @@ test('protected forecast creation requires a token', async () => {
   assert.equal(response.status, 401);
 });
 
+test('protected writes reject an invalid or expired token consistently', async () => {
+  const response = await request(app)
+    .post('/api/forecasts')
+    .set('Authorization', 'Bearer expired-or-invalid-token')
+    .send({
+      statement: 'This request should not reach the database',
+      targetDate: '2030-01-01',
+    });
+
+  assert.equal(response.status, 401);
+  assert.equal(response.body.error, 'Invalid or expired token');
+});
+
 test('analytics accepts only the privacy-limited event vocabulary', () => {
   assert.deepEqual(analyticsEventData('prediction_created', 'user-1', 'forecast-1'), {
     eventName: 'prediction_created',
