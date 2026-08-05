@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { CATEGORY_OPTIONS, categoryLabel } from './lib/categories'
 
 const STATUSES = ['OPEN', 'CORRECT', 'INCORRECT', 'INCONCLUSIVE']
@@ -16,8 +16,9 @@ export default function FeedPage({
   session, forecasts, draft, setDraft, filters, setFilters, message, busy,
   composerExpanded, setComposerExpanded, publish, logout, openProfile,
   toggleSignal, toggleRepost, openForekast, addComment, commentDraft, setCommentDraft,
-  selected, setSelected, profile, setProfile, minTargetDate,
+  selected, setSelected, profile, setProfile, minTargetDate, theme, toggleTheme,
 }) {
+  const [search, setSearch] = useState('')
   useEffect(() => {
     if (!selected && !profile) return undefined
     const closeOnEscape = (event) => {
@@ -35,31 +36,51 @@ export default function FeedPage({
     }
   }, [profile, selected, setProfile, setSelected])
 
-  return (
-    <div className="feed-app">
-      <aside className="feed-sidebar">
-        <a className="feed-brand" href="/">FOREKAST<span>.</span></a>
-        <nav aria-label="Primary navigation">
-          <a href="/" className="feed-nav-link"><span>⌂</span> Landing</a>
-          <a href="/feed" className="feed-nav-link active"><span>◫</span> Forekasts</a>
-          {session && <button className="feed-nav-link" onClick={() => openProfile(session.user.username)}><span>○</span> Profile</button>}
-        </nav>
-        {session ? (
-          <div className="sidebar-account">
-            <Avatar user={session.user} button />
-            <div>
-              <button className="sidebar-profile-link" onClick={() => openProfile(session.user.username)}>@{session.user.username}</button>
-              <button onClick={logout}>Sign out</button>
-            </div>
-          </div>
-        ) : <a className="primary sidebar-signin" href="/">Sign in</a>}
-      </aside>
+  const query = search.trim().toLowerCase()
+  const visibleForecasts = query ? forecasts.filter((forecast) => [
+    forecast.statement,
+    forecast.content,
+    forecast.reasoning,
+    forecast.user?.username,
+  ].some((value) => value?.toLowerCase().includes(query))) : forecasts
+  const openCount = visibleForecasts.filter((forecast) => (forecast.status || 'OPEN') === 'OPEN').length
+  const resolvedCount = visibleForecasts.length - openCount
+  const todayStart = new Date().setHours(0, 0, 0, 0)
+  const publishedTodayCount = visibleForecasts.filter((forecast) => new Date(forecast.createdAt).getTime() >= todayStart).length
 
-      <main className="stream">
-        <header className="stream-header">
-          <div><p className="eyebrow">LIVE EDITION</p><h1>Forekasts</h1></div>
-          <span className="live-dot">Live</span>
-        </header>
+  return (
+    <div className="desk-page">
+      <header className="desk-topbar">
+        <div>
+          <p className="desk-label">PUBLIC FORECASTING DESK</p>
+          <a className="landing-brand" href="/">Forekast <span>2026</span></a>
+        </div>
+        <nav aria-label="Primary navigation">
+          <a href="/">Home</a>
+          <button className="theme-toggle" type="button" onClick={toggleTheme}>{theme === 'dark' ? 'Light' : 'Dark'}</button>
+          {session ? (
+            <>
+              <button onClick={() => openProfile(session.user.username)}>@{session.user.username}</button>
+              <button onClick={logout}>Sign out</button>
+            </>
+          ) : <a href="/">Sign in</a>}
+        </nav>
+      </header>
+
+      <main className="desk-main">
+        <section className="desk-briefing" aria-labelledby="briefing-title">
+          <div className="briefing-number">{visibleForecasts.length}</div>
+          <div className="briefing-copy">
+            <p className="eyebrow">TODAY'S BRIEFING</p>
+            <h1 id="briefing-title">forekasts in this view.</h1>
+            <p>Clear claims, dated outcomes, and a public record.</p>
+          </div>
+          <dl className="briefing-stats">
+            <div><dt>Published today</dt><dd>{publishedTodayCount}</dd></div>
+            <div><dt>Open</dt><dd>{openCount}</dd></div>
+            <div><dt>Resolved</dt><dd>{resolvedCount}</dd></div>
+          </dl>
+        </section>
 
         {session ? (
           <form className={`quick-composer ${composerExpanded ? 'expanded' : ''}`} onSubmit={publish}>
@@ -104,58 +125,59 @@ export default function FeedPage({
               </div>
             )}
           </form>
-        ) : <div className="feed-signin-note">Sign in from the <a href="/">landing page</a> to publish and personalize your feed.</div>}
+        ) : <div className="feed-signin-note"><a href="/">Sign in</a> to publish and personalize your ledger.</div>}
 
         {message && <p className="message" role="alert">{message}</p>}
 
-        <div className="stream-tools">
-          <strong>Latest forekasts</strong>
-          <div>
-            <select aria-label="Filter by category" value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value })}>
+        <section className="desk-filters" aria-label="Forekast filters">
+          <label className="search-field">
+            <span>SEARCH</span>
+            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Statement, reasoning, or forekaster" />
+          </label>
+          <div className="filter-grid">
+            <label><span>Category</span><select aria-label="Filter by category" value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value })}>
               <option value="">All categories</option>
               {CATEGORY_OPTIONS.map((category) => <option key={category.value} value={category.value}>{category.label}</option>)}
-            </select>
-            <select aria-label="Filter by status" value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })}>
+            </select></label>
+            <label><span>Status</span><select aria-label="Filter by status" value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })}>
               <option value="">All statuses</option>
               {STATUSES.map((status) => <option key={status}>{status}</option>)}
-            </select>
+            </select></label>
           </div>
-        </div>
+        </section>
 
-        <div className="compact-timeline">
-          {forecasts.length === 0 ? <p className="empty">No forekasts match this view.</p> : forecasts.map((forecast) => (
+        <section className="ledger-section" aria-labelledby="ledger-title">
+          <header className="ledger-heading">
+            <div><p className="eyebrow">NEWEST CLAIMS FIRST</p><h2 id="ledger-title">The public ledger</h2></div>
+            <span>{visibleForecasts.length} showing</span>
+          </header>
+          <div className="compact-timeline">
+          {visibleForecasts.length === 0 ? <p className="empty">No forekasts match this view.</p> : visibleForecasts.map((forecast, index) => (
             <article className="forecast-card" key={forecast.id}>
-              <Avatar user={forecast.user} button />
+              <div className="ledger-number">#{String(index + 1).padStart(2, '0')}</div>
               <div className="forecast-body">
                 <div className="forecast-author">
+                  <Avatar user={forecast.user} button />
                   <button onClick={() => openProfile(forecast.user.username)}>@{forecast.user.username}</button>
                   <span>· {new Date(forecast.createdAt).toLocaleDateString()}</span>
-                  <span className={`mini-status ${String(forecast.status || 'OPEN').toLowerCase()}`}>{forecast.status || 'OPEN'}</span>
                 </div>
                 <button className="forecast-statement" onClick={() => openForekast(forecast)}>{forecast.statement || forecast.content}</button>
                 {forecast.reasoning && <p className="forecast-reasoning">{forecast.reasoning}</p>}
-                <div className="forecast-footer">
-                  <span>{categoryLabel(forecast.category)}</span>
-                  <span>Resolves {forecast.targetDate ? new Date(forecast.targetDate).toLocaleDateString() : 'later'}</span>
-                  <button className={forecast.signals?.length ? 'signaled' : ''} onClick={() => toggleSignal(forecast)}>{forecast.signals?.length ? '◆' : '◇'} {forecast._count?.signals || 0}</button>
-                  <button onClick={() => openForekast(forecast)}>Reply · {forecast._count?.comments || 0}</button>
-                  <button className={forecast.reposts?.length ? 'reposted' : ''} onClick={() => toggleRepost(forecast)}>↻ {forecast._count?.reposts || 0}</button>
-                  <button onClick={() => openForekast(forecast)}>Details</button>
-                </div>
+              </div>
+              <div className="ledger-meta"><span>Category</span><strong>{categoryLabel(forecast.category)}</strong></div>
+              <div className="ledger-meta"><span>Target date</span><strong>{forecast.targetDate ? new Date(forecast.targetDate).toLocaleDateString() : 'Not set'}</strong></div>
+              <div className="ledger-actions">
+                <span className={`mini-status ${String(forecast.status || 'OPEN').toLowerCase()}`}>{forecast.status || 'OPEN'}</span>
+                <button className={forecast.signals?.length ? 'signaled' : ''} onClick={() => toggleSignal(forecast)}>{forecast.signals?.length ? '◆' : '◇'} {forecast._count?.signals || 0}</button>
+                <button onClick={() => openForekast(forecast)}>Reply {forecast._count?.comments || 0}</button>
+                <button className={forecast.reposts?.length ? 'reposted' : ''} onClick={() => toggleRepost(forecast)}>↻ {forecast._count?.reposts || 0}</button>
+                <button className="record-button" onClick={() => openForekast(forecast)}>Record →</button>
               </div>
             </article>
           ))}
-        </div>
+          </div>
+        </section>
       </main>
-
-      <aside className="feed-context">
-        <div className="context-card">
-          <p className="eyebrow">FOREKAST NOTE</p>
-          <h2>Make it testable.</h2>
-          <p>The strongest forekasts name a clear outcome and a date when anyone can check what happened.</p>
-        </div>
-        <div className="context-card muted"><strong>Feed controls</strong><p>Use category and status filters to narrow the conversation.</p></div>
-      </aside>
 
       {selected && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelected(null)}>
