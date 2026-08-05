@@ -1,12 +1,12 @@
 # Forekast
 
-**Social forecasting, made testable.** Publish a clear prediction, set the date
+**Make the call. Set the date.** Publish a clear prediction, set the date
 when it can be checked, discuss it, and return to record what happened.
 
 [![Open the live demo](https://img.shields.io/badge/OPEN_LIVE_DEMO-ED6B4E?style=for-the-badge&logo=render&logoColor=white)](https://forekast-lca2.onrender.com)
 [![API status](https://img.shields.io/badge/API_STATUS-173F35?style=for-the-badge)](https://forekast-api.onrender.com/api/health)
 
-[![Forekast's logged-out landing page with its social forecasting message and account access panel](docs/forekast-live-demo.png)](https://forekast-lca2.onrender.com)
+[![Forekast's logged-out landing page with its account access panel](docs/forekast-live-demo.png)](https://forekast-lca2.onrender.com)
 
 _The live logged-out experience. Select the image to open the deployed app._
 
