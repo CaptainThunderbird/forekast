@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { CATEGORY_OPTIONS, categoryLabel } from './lib/categories'
 
 const STATUSES = ['OPEN', 'CORRECT', 'INCORRECT', 'INCONCLUSIVE']
+const PAGE_LOAD_TIME = Date.now()
 
 function Avatar({ user, button = false }) {
   const content = user.avatarUrl
@@ -16,6 +17,7 @@ export default function FeedPage({
   session, forecasts, draft, setDraft, filters, setFilters, message, busy,
   composerExpanded, setComposerExpanded, publish, logout, openProfile,
   toggleSignal, toggleRepost, openForekast, addComment, commentDraft, setCommentDraft,
+  resolutionDraft, setResolutionDraft, resolveForecast, removeForecast,
   selected, setSelected, profile, setProfile, minTargetDate, theme, toggleTheme,
 }) {
   const [search, setSearch] = useState('')
@@ -120,7 +122,7 @@ export default function FeedPage({
                 <div className="composer-actions">
                   <button type="button" className="text-button" onClick={() => setComposerExpanded(false)}>Cancel</button>
                   <span>{draft.statement.length}/280</span>
-                  <button className="primary" disabled={busy || !draft.statement.trim() || !draft.targetDate}>Forekast</button>
+                  <button className="primary" disabled={busy || !draft.statement.trim() || !draft.targetDate}>Publish open claim</button>
                 </div>
               </div>
             )}
@@ -163,15 +165,22 @@ export default function FeedPage({
                 </div>
                 <button className="forecast-statement" onClick={() => openForekast(forecast)}>{forecast.statement || forecast.content}</button>
                 {forecast.reasoning && <p className="forecast-reasoning">{forecast.reasoning}</p>}
+                {forecast.comments?.length > 0 && (
+                  <div className="recent-comments" aria-label="Recent discussion">
+                    {forecast.comments.map((comment) => (
+                      <p key={comment.id}><strong>@{comment.user.username}</strong> {comment.content}</p>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="ledger-meta"><span>Category</span><strong>{categoryLabel(forecast.category)}</strong></div>
               <div className="ledger-meta"><span>Target date</span><strong>{forecast.targetDate ? new Date(forecast.targetDate).toLocaleDateString() : 'Not set'}</strong></div>
               <div className="ledger-actions">
                 <span className={`mini-status ${String(forecast.status || 'OPEN').toLowerCase()}`}>{forecast.status || 'OPEN'}</span>
                 <button className={forecast.signals?.length ? 'signaled' : ''} onClick={() => toggleSignal(forecast)}>{forecast.signals?.length ? '◆' : '◇'} {forecast._count?.signals || 0}</button>
-                <button onClick={() => openForekast(forecast)}>Reply {forecast._count?.comments || 0}</button>
+                <button onClick={() => openForekast(forecast)}>Discussion {forecast._count?.comments || 0}</button>
                 <button className={forecast.reposts?.length ? 'reposted' : ''} onClick={() => toggleRepost(forecast)}>↻ {forecast._count?.reposts || 0}</button>
-                <button className="record-button" onClick={() => openForekast(forecast)}>Record →</button>
+                <button className="record-button" onClick={() => openForekast(forecast)}>Open claim →</button>
               </div>
             </article>
           ))}
@@ -182,7 +191,7 @@ export default function FeedPage({
       {selected && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelected(null)}>
           <section className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="feed-forecast-title" onMouseDown={(event) => event.stopPropagation()}>
-            <button className="modal-close" aria-label="Close details" onClick={() => setSelected(null)}>×</button>
+            <button className="modal-close text-close" aria-label="Close claim details" onClick={() => setSelected(null)}>Close</button>
             <p className="eyebrow">{categoryLabel(selected.category)} · {selected.status}</p>
             <h2 id="feed-forecast-title">{selected.statement || selected.content}</h2>
             {selected.reasoning && <p className="detail-reasoning">{selected.reasoning}</p>}
@@ -191,13 +200,18 @@ export default function FeedPage({
               <div><dt>Published</dt><dd>{new Date(selected.createdAt).toLocaleDateString()}</dd></div>
               <div><dt>Target date</dt><dd>{selected.targetDate ? new Date(selected.targetDate).toLocaleDateString() : 'Not set'}</dd></div>
             </dl>
+            <p className="claim-state">
+              {selected.status === 'OPEN'
+                ? `This claim is open. The author can resolve and close it ${selected.targetDate ? `after ${new Date(selected.targetDate).toLocaleDateString()}` : 'when the outcome is known'}.`
+                : `This claim is closed with an outcome of ${selected.status}.`}
+            </p>
             {selected.resolution && <div className="resolution-box"><p className="eyebrow">AUTHOR-REPORTED OUTCOME</p><h3>{selected.resolution.result}</h3><p>{selected.resolution.explanation}</p></div>}
             <div className="detail-actions">
               <button className={selected.signals?.length ? 'active' : ''} onClick={() => toggleSignal(selected)}>◇ {selected._count?.signals || 0} signals</button>
               <button className={selected.reposts?.length ? 'active' : ''} onClick={() => toggleRepost(selected)}>↻ {selected._count?.reposts || 0} reposts</button>
             </div>
             <section className="comments-section">
-              <h3>Comments · {selected._count?.comments || 0}</h3>
+              <h3>Discussion · {selected._count?.comments || 0}</h3>
               {session ? (
                 <form className="comment-form" onSubmit={addComment}>
                   <textarea maxLength="500" required value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} placeholder="Write a comment…" />
@@ -217,6 +231,33 @@ export default function FeedPage({
                 )) : <p className="empty">No comments yet.</p>}
               </div>
             </section>
+            {session?.user.id === selected.user.id && selected.status === 'OPEN' && (
+              <section className="lifecycle-panel">
+                <p className="eyebrow">AUTHOR CONTROLS</p>
+                {selected.targetDate && new Date(selected.targetDate).getTime() <= PAGE_LOAD_TIME ? (
+                  <form className="resolution-form" onSubmit={resolveForecast}>
+                    <h3>Resolve and close this claim</h3>
+                    <label>Outcome
+                      <select value={resolutionDraft.result} onChange={(event) => setResolutionDraft({ ...resolutionDraft, result: event.target.value })}>
+                        <option>CORRECT</option>
+                        <option>INCORRECT</option>
+                        <option>INCONCLUSIVE</option>
+                      </select>
+                    </label>
+                    <label>What happened?
+                      <textarea required minLength="10" maxLength="2000" value={resolutionDraft.explanation} onChange={(event) => setResolutionDraft({ ...resolutionDraft, explanation: event.target.value })} />
+                    </label>
+                    <label>Evidence link
+                      <input type="url" value={resolutionDraft.sourceUrl} onChange={(event) => setResolutionDraft({ ...resolutionDraft, sourceUrl: event.target.value })} placeholder="https://..." />
+                    </label>
+                    <button className="primary" disabled={busy}>Resolve and close claim</button>
+                  </form>
+                ) : (
+                  <p className="resolution-availability">Resolution becomes available after the target date.</p>
+                )}
+                <button className="danger" disabled={busy} onClick={() => removeForecast(selected.id)}>Delete open claim</button>
+              </section>
+            )}
           </section>
         </div>
       )}

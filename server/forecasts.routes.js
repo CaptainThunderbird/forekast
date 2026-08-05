@@ -5,6 +5,11 @@ import { optionalAuth, requireAuth } from './auth.js';
 import { commentSchema, forecastSchema, resolutionSchema, validate } from './validation.js';
 
 const engagementCount = { select: { signals: true, comments: true, reposts: true } };
+const recentComments = {
+  orderBy: { createdAt: 'desc' },
+  take: 2,
+  include: { user: { select: { id: true, username: true, avatarUrl: true } } },
+};
 
 const router = express.Router();
 
@@ -25,6 +30,7 @@ router.get('/', optionalAuth, async (_req, res) => {
         ...(_req.userId ? { signals: { where: { userId: _req.userId }, select: { id: true } } } : {}),
         ...(_req.userId ? { reposts: { where: { userId: _req.userId }, select: { userId: true } } } : {}),
         resolution: true,
+        comments: recentComments,
       },
     });
     if (_req.userId && (_req.query.category || _req.query.status)) {
@@ -56,6 +62,7 @@ router.get('/feed', requireAuth, async (req, res) => {
         signals: { where: { userId: req.userId }, select: { id: true } },
         reposts: { where: { userId: req.userId }, select: { userId: true } },
         resolution: true,
+        comments: recentComments,
       },
     });
     res.json(forecasts);
