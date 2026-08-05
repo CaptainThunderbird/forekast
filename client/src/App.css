@@ -130,7 +130,7 @@ h1, h2, h3 { margin: 0; font-family: 'Playfair Display', Georgia, serif; font-we
 .desk-topbar { width: min(1780px, calc(100% - 72px)); margin: 0 auto; }
 .desk-main { width: min(1780px, calc(100% - 72px)); margin: 0 auto; padding-bottom: 80px; }
 .desk-briefing { display: grid; grid-template-columns: clamp(170px, 18vw, 310px) minmax(330px, 1fr) minmax(380px, .85fr); align-items: end; border-bottom: 1px solid var(--line); padding: clamp(56px, 8vw, 110px) 0 48px; }
-.briefing-number { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(8rem, 15vw, 16rem); line-height: .68; letter-spacing: -.07em; }
+.briefing-number { align-self: start; margin-top: 34px; font-family: 'Playfair Display', Georgia, serif; font-size: clamp(8rem, 15vw, 16rem); line-height: .68; letter-spacing: -.07em; }
 .briefing-copy { padding: 0 54px 0 24px; }
 .briefing-copy .eyebrow { margin-bottom: 10px; color: var(--gold); }
 .briefing-copy h1 { max-width: 720px; font-size: clamp(3.6rem, 6vw, 6.6rem); line-height: .91; letter-spacing: -.045em; }
@@ -283,7 +283,7 @@ h1, h2, h3 { margin: 0; font-family: 'Playfair Display', Georgia, serif; font-we
   .landing-access h2 { font-size: 3rem; }
   .landing-footer { margin-top: 38px; }
   .desk-briefing { grid-template-columns: 1fr; padding: 58px 0 34px; }
-  .briefing-number { font-size: 9rem; }
+  .briefing-number { margin-top: 0; font-size: 9rem; }
   .briefing-copy { padding: 12px 0 0; }
   .briefing-copy h1 { font-size: 4rem; }
   .briefing-stats { grid-column: auto; margin-top: 34px; }
