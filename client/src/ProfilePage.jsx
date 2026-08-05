@@ -10,7 +10,7 @@ function Avatar({ user, large = false }) {
 
 export default function ProfilePage({
   session, profile, loading, message, busy, bioDraft, setBioDraft,
-  avatarDraft, setAvatarDraft, saveProfile, toggleFollow, logout,
+  avatarDraft, setAvatarDraft, saveProfile, toggleFollow, logout, theme, toggleTheme,
 }) {
   const isOwner = Boolean(session?.user.id && profile?.id === session.user.id)
   const [photoError, setPhotoError] = useState('')
@@ -70,9 +70,10 @@ export default function ProfilePage({
   return (
     <div className="profile-page">
       <header className="profile-topbar">
-        <a className="feed-brand" href="/">FOREKAST<span>.</span></a>
+        <div><p className="desk-label">PUBLIC FORECASTING DESK</p><a className="landing-brand" href="/">Forekast <span>2026</span></a></div>
         <nav>
           <a href="/feed">Forekasts</a>
+          <button className="theme-toggle" type="button" onClick={toggleTheme}>{theme === 'dark' ? 'Light' : 'Dark'}</button>
           {session ? <button onClick={logout}>Sign out</button> : <a href="/">Sign in</a>}
         </nav>
       </header>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import FeedPage from './FeedPage'
 import ProfilePage from './ProfilePage'
-import { CATEGORY_OPTIONS, categoryLabel } from './lib/categories'
+import { categoryLabel } from './lib/categories'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
 const MIN_TARGET_DATE = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
@@ -34,6 +34,20 @@ function App() {
   const [resolutionDraft, setResolutionDraft] = useState({ result: 'CORRECT', explanation: '', sourceUrl: '' })
   const [commentDraft, setCommentDraft] = useState('')
   const [composerExpanded, setComposerExpanded] = useState(false)
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('forekast-theme')
+    if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  })
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('forekast-theme', theme)
+  }, [theme])
+
+  function toggleTheme() {
+    setTheme((current) => current === 'dark' ? 'light' : 'dark')
+  }
 
   function navigate(path, { replace = false } = {}) {
     window.history[replace ? 'replaceState' : 'pushState']({}, '', path)
@@ -310,6 +324,8 @@ function App() {
         saveProfile={saveProfile}
         toggleFollow={toggleFollow}
         logout={logout}
+        theme={theme}
+        toggleTheme={toggleTheme}
       />
     )
   }
@@ -341,118 +357,68 @@ function App() {
         profile={profile}
         setProfile={setProfile}
         minTargetDate={MIN_TARGET_DATE}
+        theme={theme}
+        toggleTheme={toggleTheme}
       />
     )
   }
 
   return (
-    <main className="shell">
-      <aside className="brand-panel">
-        <a className="brand" href="/" aria-label="Forekast home">FOREKAST<span>.</span></a>
-        <div className="brand-copy">
-          <p className="eyebrow">SOCIAL FORECASTING, MADE TESTABLE</p>
-          <h1>Make a claim.<br />Set a date.</h1>
-          <p>Publish a clear prediction, discuss it with real people, and return at the target date to record what happened.</p>
-          <ol className="brand-proof" aria-label="How Forekast works">
-            <li><span>01</span>Write a specific prediction</li>
-            <li><span>02</span>Choose when it can be checked</li>
-            <li><span>03</span>Record the outcome with evidence</li>
-          </ol>
+    <main className="landing-page">
+      <header className="landing-topbar">
+        <div>
+          <p className="desk-label">PUBLIC FORECASTING DESK</p>
+          <a className="landing-brand" href="/" aria-label="Forekast home">Forekast <span>2026</span></a>
         </div>
-        <p className="edition">INDEPENDENT PUBLIC BETA · NO ADS</p>
-      </aside>
+        <div className="landing-top-actions">
+          <button className="theme-toggle" type="button" onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>
+            {theme === 'dark' ? 'Light' : 'Dark'}
+          </button>
+          <a href="/feed">Public ledger</a>
+          {session && <button type="button" onClick={logout}>Sign out</button>}
+        </div>
+      </header>
 
-      <section className="feed-panel">
-        <header>
-          <div>
-            <p className="eyebrow">CLEAR CLAIMS · DATED OUTCOMES</p>
-            <h2>Latest forekasts</h2>
-          </div>
-          {session && (
-            <div className="account-actions">
-              <button className="text-button" onClick={() => openProfile(session.user.username)}>@{session.user.username}</button>
-              <button className="text-button" onClick={logout}>Sign out</button>
-            </div>
-          )}
-        </header>
+      <section className="landing-hero">
+        <div className="landing-thesis">
+          <p className="eyebrow">A RECORD OF WHAT COMES NEXT</p>
+          <h1>Make the call.<br />Set the date.</h1>
+          <p>Publish a testable prediction. Return to record what happened.</p>
+        </div>
 
         {!session ? (
-          <form className="auth-card" onSubmit={handleAuth}>
+          <form className="landing-access" onSubmit={handleAuth}>
             <p className="issue">ACCOUNT ACCESS</p>
-            <h3>{mode === 'login' ? 'Welcome back.' : 'Join the conversation.'}</h3>
+            <h2>{mode === 'login' ? 'Welcome back.' : 'Create an account.'}</h2>
             {mode === 'register' && (
               <label>Username<input required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></label>
             )}
             <label>Email<input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
             <label>Password<input type="password" minLength="8" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-            <button className="primary" disabled={busy}>{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}</button>
+            <button className="primary" disabled={busy}>{busy ? 'Please wait...' : mode === 'login' ? 'Sign in' : 'Create account'}</button>
             <button type="button" className="text-button switch" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setMessage('') }}>
-              {mode === 'login' ? 'New here? Create an account' : 'Already have an account? Sign in'}
+              {mode === 'login' ? 'Create an account' : 'Use an existing account'}
             </button>
           </form>
         ) : (
-          <div className="auth-card landing-launch">
+          <div className="landing-access landing-launch">
             <p className="issue">SIGNED IN</p>
-            <h3>Ready to forekast?</h3>
-            <p>Your timeline and composer now live in a focused, compact workspace.</p>
-            <a className="primary" href="/feed">Open your forekast feed</a>
+            <h2>@{session.user.username}</h2>
+            <a className="primary" href="/feed">Open your ledger <span aria-hidden="true">→</span></a>
           </div>
         )}
-
-        {message && <p className="message" role="alert">{message}</p>}
-
-        <section className="trust-strip" aria-label="Forekast trust and privacy details">
-          <div><strong>No ads</strong><span>Your attention is not the product.</span></div>
-          <div><strong>Limited analytics</strong><span>Core actions only—never forekast or comment text.</span></div>
-          <div><strong>Open source</strong><span>The application code and decisions are public.</span></div>
-        </section>
-
-        <footer className="landing-footer">
-          <p>Forekast is an independent beta project. No fake testimonials, urgency timers, or obstructive popups.</p>
-          <nav aria-label="Project information">
-            <a href="https://github.com/CaptainThunderbird/forekast" target="_blank" rel="noreferrer">Source code</a>
-            <a href="https://github.com/CaptainThunderbird/forekast/issues" target="_blank" rel="noreferrer">Feedback &amp; issues</a>
-            <a href="https://forekast-api.onrender.com/api/health" target="_blank" rel="noreferrer">API status</a>
-          </nav>
-        </footer>
-
-        <div className="landing-feed-legacy"><div className="filters" aria-label="Forekast filters">
-          <label>Category
-            <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
-              <option value="">All categories</option>
-              {CATEGORY_OPTIONS.map((category) => <option key={category.value} value={category.value}>{category.label}</option>)}
-            </select>
-          </label>
-          <label>Status
-            <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
-              <option value="">All statuses</option>
-              {['OPEN', 'CORRECT', 'INCORRECT', 'INCONCLUSIVE'].map((status) => <option key={status}>{status}</option>)}
-            </select>
-          </label>
-        </div>
-
-        <div className="timeline">
-          {forecasts.length === 0 ? <p className="empty">No forekasts yet. Be the first.</p> : forecasts.map((forecast) => (
-            <article key={forecast.id}>
-              <div className="avatar">{forecast.user.username.slice(0, 1).toUpperCase()}</div>
-              <div>
-                <p className="meta"><button className="author-button" onClick={() => openProfile(forecast.user.username)}>@{forecast.user.username}</button><span>{new Date(forecast.createdAt).toLocaleString()}</span></p>
-                <div className="forecast-tags">
-                  <span>{categoryLabel(forecast.category || 'OTHER')}</span>
-                  <span className={`status ${String(forecast.status || 'OPEN').toLowerCase()}`}>{forecast.status || 'OPEN'}</span>
-                </div>
-                <p className="post">{forecast.statement || forecast.content}</p>
-                {forecast.reasoning && <p className="reasoning">{forecast.reasoning}</p>}
-                {forecast.targetDate && <p className="target">Resolves by {new Date(forecast.targetDate).toLocaleDateString()}</p>}
-                <button className={`signal-button ${forecast.signals?.length ? 'active' : ''}`} onClick={() => toggleSignal(forecast)}>
-                  {forecast.signals?.length ? '◆' : '◇'} {forecast._count?.signals || forecast._count?.likes || 0} signals
-                </button>
-                <button className="text-button details-button" onClick={() => openForekast(forecast)}>View details</button>
-              </div>
-            </article>
-          ))}
-        </div></div>
       </section>
+
+      {message && <p className="message landing-message" role="alert">{message}</p>}
+
+      <footer className="landing-footer">
+        <span>Independent public beta</span>
+        <nav aria-label="Project information">
+          <a href="https://github.com/CaptainThunderbird/forekast" target="_blank" rel="noreferrer">Source</a>
+          <a href="https://github.com/CaptainThunderbird/forekast/issues" target="_blank" rel="noreferrer">Feedback</a>
+          <a href="https://forekast-api.onrender.com/api/health" target="_blank" rel="noreferrer">API</a>
+        </nav>
+      </footer>
 
       {selected && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelected(null)}>
